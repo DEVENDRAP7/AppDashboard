@@ -1,6 +1,6 @@
 App Name,Progress (%),Published?,Current Stage,Target Launch,Days Left,GitHub Link,Firebase Link,Privacy Policy Link,Notes
-DigiPulse,100%,Yes,Live,June 2026,0,https://github.com/DEVENDRAP7/PhoneMoodTranslator,,https://github.com/DEVENDRAP7/PhoneMoodTranslator/blob/main/privacy_policy.md,"Published. Was Phone Mood Translator. pkg com.devendrap7.phonemoodtranslator"
-FIFA World Cup,90%,No,Closed Testing,June 2026,7,https://github.com/DEVENDRAP7/FifaWorldCup,https://console.firebase.google.com/project/fifaworldcup2026-23d01/overview,https://github.com/DEVENDRAP7/FifaWorldCup/blob/main/delete-account.html,"Closed testing on Play. Flutter + Firebase. pkg com.devendrap7.fifaworldcup"
+DigiPulse,100%,Yes,Live,June 2026,0,https://github.com/DEVENDRAP7/PhoneMoodTranslator,,https://devendrap7.github.io/PhoneMoodTranslator/privacy_policy.html,"Published. Was Phone Mood Translator. pkg com.devendrap7.phonemoodtranslator"
+FIFA World Cup,90%,No,Closed Testing,June 2026,7,https://github.com/DEVENDRAP7/FifaWorldCup,https://console.firebase.google.com/project/fifaworldcup2026-23d01/overview,https://devendrap7.github.io/FifaWorldCup/,"Closed testing on Play. Flutter + Firebase. pkg com.devendrap7.fifaworldcup"
 Riddles - Brain,5%,No,Ideation,July 2026,30,https://github.com/DEVENDRAP7/Riddles-brain,,,"Riddles suite. pkg com.devendrap7.riddles.brain"
 Riddles - Maths,5%,No,Ideation,August 2026,61,https://github.com/DEVENDRAP7/Riddles-maths,,,"Riddles suite. pkg com.devendrap7.riddles.maths"
 Riddles - Words,5%,No,Ideation,September 2026,92,https://github.com/DEVENDRAP7/Riddles-words,,,"Riddles suite. pkg com.devendrap7.riddles.words"
