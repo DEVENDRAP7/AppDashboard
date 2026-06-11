@@ -1369,15 +1369,6 @@
         // Start on Dashboard (hides the apps-only search)
         showView('dashboard');
 
-        // ===== Auto-refresh: re-pull the sheet every 3 min (skips while editing) =====
-        setInterval(() => {
-            const modalOpen = document.getElementById('modal').classList.contains('open');
-            const onDetail = document.getElementById('view-detail').classList.contains('active');
-            const editing = !!document.getElementById('prog-input');
-            if (modalOpen || onDetail || editing) return;
-            loadAndRender();
-        }, 180000);
-
         // ===== Modal =====
         function openModal() { document.getElementById('modal').classList.add('open'); document.getElementById('f-name').focus(); }
         function closeModal() { document.getElementById('modal').classList.remove('open'); }
