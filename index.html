@@ -6,19 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control — App Launch Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #08090f;
-            --panel: #0e1019;
+            --bg: #07080d;
+            --bg-2: #0a0c14;
+            --panel: #0d0f18;
             --surface: rgba(255, 255, 255, 0.035);
             --surface-hi: rgba(255, 255, 255, 0.06);
             --stroke: rgba(255, 255, 255, 0.07);
-            --stroke-hi: rgba(255, 255, 255, 0.14);
+            --stroke-hi: rgba(255, 255, 255, 0.13);
 
-            --text: #f5f6fb;
-            --muted: #8a8fa6;
-            --dim: #555a72;
+            --text: #f6f7fb;
+            --muted: #8b90a6;
+            --dim: #565b73;
 
             --indigo: #6366f1;
             --violet: #8b5cf6;
@@ -27,344 +29,292 @@
             --sky: #38bdf8;
             --rose: #fb7185;
 
-            --r-lg: 22px;
-            --r: 16px;
+            --r-xl: 26px;
+            --r-lg: 20px;
+            --r: 15px;
             --r-sm: 11px;
+
+            --sidebar-w: 248px;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --display: 'Plus Jakarta Sans', var(--font);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
-
         body {
+            font-family: var(--font);
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
-            padding: 40px 24px 80px;
-            position: relative;
-            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
+        ::selection { background: rgba(99,102,241,0.4); }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 20px; border: 3px solid var(--bg); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
 
-        /* Subtle grid + ambient glow background */
-        body::before {
-            content: "";
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
-            background-image:
-                radial-gradient(600px 400px at 12% -5%, rgba(99,102,241,0.18), transparent 60%),
-                radial-gradient(500px 400px at 100% 0%, rgba(139,92,246,0.14), transparent 55%),
-                linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+        /* ============ APP SHELL ============ */
+        .app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
+
+        /* ---- Sidebar ---- */
+        .sidebar {
+            position: sticky; top: 0; height: 100vh;
+            background: linear-gradient(180deg, var(--bg-2), var(--bg));
+            border-right: 1px solid var(--stroke);
+            padding: 26px 18px; display: flex; flex-direction: column; gap: 6px;
+            z-index: 20;
         }
-
-        .container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-
-        /* ---------- Header ---------- */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            gap: 24px; margin-bottom: 32px; flex-wrap: wrap;
-        }
-        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 22px; }
         .logo {
-            width: 50px; height: 50px; border-radius: 14px;
+            width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
             background: linear-gradient(135deg, var(--indigo), var(--violet));
-            display: grid; place-items: center; flex-shrink: 0;
-            box-shadow: 0 8px 28px -8px rgba(99,102,241,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
+            display: grid; place-items: center;
+            box-shadow: 0 8px 24px -8px rgba(99,102,241,0.8), inset 0 1px 0 rgba(255,255,255,0.3);
         }
-        .logo svg { width: 25px; height: 25px; stroke: #fff; }
-        h1 {
-            font-size: 1.9rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;
-            background: linear-gradient(90deg, #fff, #adb1d4);
-            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .subtitle { color: var(--muted); font-size: 0.92rem; margin-top: 3px; font-weight: 500; }
+        .logo svg { width: 22px; height: 22px; stroke: #fff; }
+        .brand-name { font-family: var(--display); font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; }
+        .brand-sub { font-size: 0.7rem; color: var(--dim); font-weight: 600; margin-top: 1px; }
 
-        .header-actions { display: flex; align-items: center; gap: 12px; }
-        .live-chip {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 9px 14px; border-radius: 30px;
-            background: var(--surface); border: 1px solid var(--stroke);
-            font-size: 0.8rem; font-weight: 600; color: var(--muted);
+        .nav-label { font-size: 0.66rem; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 10px 7px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 11px;
+            color: var(--muted); font-weight: 600; font-size: 0.88rem; cursor: pointer;
+            transition: background 0.18s, color 0.18s; border: 1px solid transparent;
         }
-        .pulse {
-            width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-            box-shadow: 0 0 0 0 rgba(52,211,153,0.6); animation: pulse 2s infinite;
+        .nav-item svg { width: 18px; height: 18px; stroke: currentColor; flex-shrink: 0; }
+        .nav-item:hover { color: var(--text); background: var(--surface); }
+        .nav-item.active { color: var(--text); background: var(--surface-hi); border-color: var(--stroke); }
+        .nav-item.active svg { stroke: var(--indigo); }
+        .nav-badge { margin-left: auto; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: rgba(99,102,241,0.18); color: #a5b4fc; }
+
+        .sidebar-foot { margin-top: auto; }
+        .upgrade {
+            border-radius: var(--r); padding: 16px; position: relative; overflow: hidden;
+            background: linear-gradient(135deg, rgba(99,102,241,0.16), rgba(139,92,246,0.1));
+            border: 1px solid rgba(99,102,241,0.25);
         }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.55); }
-            70% { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
-            100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+        .upgrade h4 { font-size: 0.85rem; font-weight: 700; }
+        .upgrade p { font-size: 0.74rem; color: var(--muted); margin: 5px 0 12px; line-height: 1.4; }
+        .upgrade a { display: block; text-align: center; padding: 8px; border-radius: 9px; background: #fff; color: #0a0c14; font-size: 0.78rem; font-weight: 700; text-decoration: none; transition: transform 0.15s; }
+        .upgrade a:hover { transform: translateY(-1px); }
+
+        /* ---- Main ---- */
+        .main { position: relative; min-width: 0; }
+        .main::before {
+            content: ""; position: fixed; inset: 0 0 0 var(--sidebar-w); z-index: 0; pointer-events: none;
+            background-image:
+                radial-gradient(700px 460px at 18% -8%, rgba(99,102,241,0.16), transparent 60%),
+                radial-gradient(560px 440px at 100% 0%, rgba(139,92,246,0.12), transparent 55%);
         }
+        .main-inner { position: relative; z-index: 1; padding: 22px 34px 70px; max-width: 1400px; }
+
+        /* ---- Topbar ---- */
+        .topbar { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; flex-wrap: wrap; }
+        .page-title h1 { font-family: var(--display); font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; }
+        .page-title p { color: var(--muted); font-size: 0.86rem; margin-top: 2px; font-weight: 500; }
+
+        .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+        .search {
+            display: flex; align-items: center; gap: 9px; padding: 0 14px; height: 42px;
+            background: var(--surface); border: 1px solid var(--stroke); border-radius: 12px;
+            width: 240px; transition: border-color 0.2s, width 0.2s;
+        }
+        .search:focus-within { border-color: var(--stroke-hi); }
+        .search svg { width: 16px; height: 16px; stroke: var(--dim); flex-shrink: 0; }
+        .search input { background: none; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 0.88rem; width: 100%; }
+        .search input::placeholder { color: var(--dim); }
+
+        .icon-btn {
+            width: 42px; height: 42px; border-radius: 12px; cursor: pointer; flex-shrink: 0;
+            background: var(--surface); border: 1px solid var(--stroke); color: var(--muted);
+            display: grid; place-items: center; transition: color 0.2s, border-color 0.2s; position: relative;
+        }
+        .icon-btn:hover { color: var(--text); border-color: var(--stroke-hi); }
+        .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+        .icon-btn .ndot { position: absolute; top: 10px; right: 11px; width: 7px; height: 7px; border-radius: 50%; background: var(--rose); border: 2px solid var(--bg); }
 
         .btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 11px 18px; border-radius: 12px;
-            background: linear-gradient(135deg, var(--indigo), var(--violet));
-            color: #fff; font-size: 0.88rem; font-weight: 600; border: none; cursor: pointer;
-            transition: transform 0.15s, filter 0.2s, box-shadow 0.2s;
+            display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--indigo), var(--violet)); color: #fff;
+            font-family: inherit; font-size: 0.88rem; font-weight: 600; border: none; cursor: pointer;
+            transition: transform 0.15s, filter 0.2s, box-shadow 0.2s; white-space: nowrap;
             box-shadow: 0 8px 22px -8px rgba(99,102,241,0.7), inset 0 1px 0 rgba(255,255,255,0.2);
         }
         .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
         .btn:active { transform: translateY(0); }
-        .btn svg { width: 16px; height: 16px; stroke: #fff; }
+        .btn svg { width: 17px; height: 17px; stroke: #fff; }
 
-        /* ---------- Bento grid ---------- */
-        .bento {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            margin-bottom: 18px;
-        }
+        .live-chip { display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; height: 42px; border-radius: 12px; background: var(--surface); border: 1px solid var(--stroke); font-size: 0.8rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+        .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(52,211,153,0.6); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.55); } 70% { box-shadow: 0 0 0 7px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
 
+        /* ============ BENTO ============ */
+        .bento { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 14px; }
         .panel {
-            position: relative;
-            background: var(--surface);
-            border: 1px solid var(--stroke);
-            border-radius: var(--r);
-            padding: 22px;
-            backdrop-filter: blur(14px);
-            overflow: hidden;
-            transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+            position: relative; background: var(--surface); border: 1px solid var(--stroke);
+            border-radius: var(--r-lg); padding: 22px; backdrop-filter: blur(16px); overflow: hidden;
+            transition: border-color 0.25s, transform 0.25s;
             opacity: 0; transform: translateY(14px); animation: rise 0.55s forwards;
         }
         @keyframes rise { to { opacity: 1; transform: translateY(0); } }
-        .panel:hover { border-color: var(--stroke-hi); }
-
-        /* gradient hairline border accent on top */
         .panel::after {
-            content: ""; position: absolute; inset: 0; border-radius: inherit;
-            padding: 1px; pointer-events: none;
-            background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent 40%);
+            content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+            background: linear-gradient(135deg, rgba(255,255,255,0.16), transparent 42%);
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            opacity: 0.6;
+            -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.55;
         }
+        .panel:hover { border-color: var(--stroke-hi); }
 
-        /* --- Hero north-star panel (spans 2x2) --- */
         .hero { grid-column: span 2; grid-row: span 2; padding: 28px; display: flex; flex-direction: column; }
-        .hero-bg {
-            position: absolute; inset: 0; z-index: 0;
-            background: radial-gradient(420px 300px at 85% 110%, rgba(99,102,241,0.28), transparent 60%);
-        }
+        .hero-bg { position: absolute; inset: 0; z-index: 0; background: radial-gradient(440px 320px at 88% 115%, rgba(99,102,241,0.3), transparent 62%); }
         .hero > * { position: relative; z-index: 1; }
-        .panel-label {
-            font-size: 0.76rem; font-weight: 700; color: var(--muted);
-            text-transform: uppercase; letter-spacing: 0.06em;
-            display: flex; align-items: center; gap: 8px;
-        }
+        .panel-label { font-size: 0.74rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; display: flex; align-items: center; gap: 8px; }
         .panel-label .dot { width: 7px; height: 7px; border-radius: 50%; }
-        .hero-metric { font-size: 4.2rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin: 14px 0 6px; }
-        .hero-sub { color: var(--muted); font-size: 0.95rem; font-weight: 500; }
+        .hero-metric { font-family: var(--display); font-size: 4.4rem; font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin: 16px 0 8px; }
+        .hero-sub { color: var(--muted); font-size: 0.92rem; font-weight: 500; }
         .trend-up { color: var(--green); font-weight: 700; }
+        .spark { margin-top: auto; width: 100%; height: 94px; }
+        .ring-row { display: flex; gap: 28px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+        .ring-stat .num { font-family: var(--display); font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em; }
+        .ring-stat .lbl { font-size: 0.76rem; color: var(--muted); font-weight: 600; }
 
-        /* sparkline area */
-        .spark { margin-top: auto; width: 100%; height: 90px; }
-
-        .ring-row { display: flex; gap: 26px; align-items: center; margin-top: 22px; flex-wrap: wrap; }
-        .ring-stat { display: flex; align-items: center; gap: 12px; }
-        .ring-stat .num { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
-        .ring-stat .lbl { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
-
-        /* --- Donut KPI --- */
-        .kpi-value { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; margin-top: 10px; }
-        .kpi-sub { font-size: 0.8rem; color: var(--dim); margin-top: 2px; font-weight: 500; }
-        .kpi-delta { font-size: 0.82rem; font-weight: 700; margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; }
+        .kpi-value { font-family: var(--display); font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; margin-top: 10px; }
+        .kpi-sub { font-size: 0.78rem; color: var(--dim); margin-top: 2px; font-weight: 500; }
+        .kpi-delta { font-size: 0.8rem; font-weight: 700; margin-top: 12px; display: inline-flex; align-items: center; gap: 5px; }
         .up { color: var(--green); } .down { color: var(--rose); }
-
         .donut-wrap { display: flex; align-items: center; gap: 18px; margin-top: 6px; }
 
-        /* ---------- Section heading ---------- */
-        .section-head {
-            display: flex; align-items: baseline; justify-content: space-between;
-            margin: 34px 4px 16px;
-        }
-        .section-head h2 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
-        .section-head .count { color: var(--dim); font-size: 0.85rem; font-weight: 600; }
+        /* ============ SECTION + TABS ============ */
+        .section-head { display: flex; align-items: center; gap: 16px; margin: 32px 2px 16px; flex-wrap: wrap; }
+        .section-head h2 { font-family: var(--display); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+        .section-head .count { color: var(--dim); font-size: 0.82rem; font-weight: 600; }
+        .tabs { display: flex; gap: 6px; margin-left: auto; background: var(--surface); border: 1px solid var(--stroke); border-radius: 12px; padding: 4px; }
+        .tab { padding: 7px 14px; border-radius: 9px; font-size: 0.82rem; font-weight: 600; color: var(--muted); cursor: pointer; border: none; background: none; font-family: inherit; transition: color 0.18s, background 0.18s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--text); background: var(--surface-hi); box-shadow: inset 0 0 0 1px var(--stroke); }
 
-        /* ---------- App cards ---------- */
-        .grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px;
-        }
+        /* ============ CARDS ============ */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
         .card {
             position: relative; background: var(--surface); border: 1px solid var(--stroke);
-            border-radius: var(--r-lg); padding: 22px; backdrop-filter: blur(14px); overflow: hidden;
-            transition: transform 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.25s, box-shadow 0.25s;
+            border-radius: var(--r-xl); padding: 22px; backdrop-filter: blur(16px); overflow: hidden;
+            transition: transform 0.28s cubic-bezier(.2,.8,.2,1), border-color 0.25s, box-shadow 0.25s;
             opacity: 0; transform: translateY(14px); animation: rise 0.55s forwards;
         }
-        .card::before {
-            content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
-            background: var(--c, var(--indigo)); opacity: 0.9;
-        }
-        .card:hover {
-            transform: translateY(-5px); border-color: var(--stroke-hi);
-            box-shadow: 0 26px 50px -16px rgba(0,0,0,0.7);
-        }
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+        .card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c, var(--indigo)); opacity: 0.9; }
+        .card:hover { transform: translateY(-5px); border-color: var(--stroke-hi); box-shadow: 0 28px 54px -18px rgba(0,0,0,0.75); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
         .app-row { display: flex; align-items: center; gap: 12px; }
         .app-icon {
-            width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
-            display: grid; place-items: center; font-weight: 800; font-size: 1rem; color: #fff;
-            background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 55%, #000));
-            box-shadow: 0 4px 14px -4px var(--c);
+            width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: grid; place-items: center;
+            font-family: var(--display); font-weight: 800; font-size: 1rem; color: #fff;
+            background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 50%, #000));
+            box-shadow: 0 5px 16px -5px var(--c), inset 0 1px 0 rgba(255,255,255,0.25);
         }
-        .app-name { font-size: 1.12rem; font-weight: 700; letter-spacing: -0.01em; }
-        .app-id { font-size: 0.74rem; color: var(--dim); margin-top: 2px; font-weight: 500; }
-
-        .badge {
-            padding: 5px 11px; border-radius: 30px; font-size: 0.7rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;
-            display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent;
-        }
+        .app-name { font-family: var(--display); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+        .app-id { font-size: 0.73rem; color: var(--dim); margin-top: 2px; font-weight: 500; }
+        .badge { padding: 5px 11px; border-radius: 30px; font-size: 0.69rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; }
         .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
         .badge-ideation { background: rgba(99,102,241,0.12); color: #a5b4fc; border-color: rgba(99,102,241,0.3); }
         .badge-dev      { background: rgba(251,191,36,0.12); color: #fcd34d; border-color: rgba(251,191,36,0.3); }
         .badge-live     { background: rgba(52,211,153,0.12); color: #6ee7b7; border-color: rgba(52,211,153,0.3); }
 
-        .progress-container { margin-bottom: 18px; }
-        .progress-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
-        .progress-label b { color: var(--text); font-size: 0.95rem; font-weight: 700; }
-        .progress-bar-bg { background: rgba(255,255,255,0.07); height: 7px; border-radius: 20px; overflow: hidden; }
-        .progress-bar-fill {
-            height: 100%; border-radius: 20px; width: 0;
-            background: linear-gradient(90deg, color-mix(in srgb, var(--c) 70%, #fff), var(--c));
-            box-shadow: 0 0 12px var(--c); transition: width 1s cubic-bezier(.2,.8,.2,1);
-        }
-
-        .meta { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--stroke); padding-top: 16px; }
-        .meta-item { display: flex; flex-direction: column; gap: 4px; }
-        .meta-item.right { text-align: right; }
-        .meta-label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
-        .meta-value { font-weight: 700; font-size: 0.92rem; }
-        .days-urgent { color: var(--amber); } .days-done { color: var(--green); }
-
-        .note {
-            margin-top: 14px; font-size: 0.82rem; color: var(--muted); line-height: 1.45;
-            background: rgba(255,255,255,0.03); border: 1px solid var(--stroke);
-            border-radius: var(--r-sm); padding: 10px 12px;
-        }
-        .links { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-        .link-chip {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 7px 12px; border-radius: 9px; text-decoration: none;
-            font-size: 0.78rem; font-weight: 600; color: var(--muted);
-            background: var(--surface-hi); border: 1px solid var(--stroke);
-            transition: color 0.2s, border-color 0.2s, transform 0.15s;
-        }
-        .link-chip:hover { color: var(--text); border-color: var(--stroke-hi); transform: translateY(-1px); }
-        .link-chip svg { width: 14px; height: 14px; }
-
-        /* ---- Console status pill ---- */
         .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-        .pill {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 5px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 600;
-            background: rgba(255,255,255,0.04); border: 1px solid var(--stroke); color: var(--muted);
-        }
+        .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; font-size: 0.71rem; font-weight: 600; background: rgba(255,255,255,0.04); border: 1px solid var(--stroke); color: var(--muted); }
         .pill svg { width: 13px; height: 13px; }
         .pill .sdot { width: 7px; height: 7px; border-radius: 50%; }
         .console-live    { color: #6ee7b7; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); }
         .console-pending { color: #fcd34d; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.1); }
         .console-draft   { color: #93c5fd; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.1); }
-        .gh-synced  { color: #a5b4fc; border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.1); }
-        .gh-none    { color: var(--dim); }
+        .gh-synced { color: #a5b4fc; border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.1); }
+        .gh-none { color: var(--dim); }
 
-        /* ---- Timeline ---- */
-        .timeline { display: flex; flex-direction: column; gap: 0; }
-        .tl-month {
-            display: grid; grid-template-columns: 130px 1fr; gap: 18px;
-            padding: 18px 0; border-top: 1px solid var(--stroke); align-items: start;
-        }
-        .tl-month:first-child { border-top: none; }
-        .tl-mlabel { font-weight: 700; font-size: 0.95rem; }
-        .tl-mcount { font-size: 0.76rem; color: var(--dim); margin-top: 3px; font-weight: 600; }
-        .tl-apps { display: flex; flex-direction: column; gap: 10px; }
-        .tl-app {
-            display: flex; align-items: center; gap: 12px;
-            background: var(--surface); border: 1px solid var(--stroke);
-            border-radius: var(--r-sm); padding: 12px 14px;
-        }
-        .tl-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 20px; overflow: hidden; }
-        .tl-bar { height: 100%; border-radius: 20px; background: var(--c, var(--indigo)); }
-        .tl-name { font-weight: 600; font-size: 0.9rem; min-width: 110px; }
-        .tl-days { font-size: 0.8rem; font-weight: 700; min-width: 64px; text-align: right; color: var(--muted); }
+        .progress-container { margin-bottom: 16px; }
+        .progress-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+        .progress-label b { color: var(--text); font-size: 0.95rem; font-weight: 700; }
+        .progress-bar-bg { background: rgba(255,255,255,0.07); height: 7px; border-radius: 20px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 20px; width: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 65%, #fff), var(--c)); box-shadow: 0 0 12px var(--c); transition: width 1s cubic-bezier(.2,.8,.2,1); }
 
-        /* ---- Add App modal ---- */
-        .modal-overlay {
-            position: fixed; inset: 0; z-index: 50; display: none;
-            background: rgba(5,6,12,0.7); backdrop-filter: blur(6px);
-            align-items: center; justify-content: center; padding: 20px;
-        }
-        .modal-overlay.open { display: flex; animation: fade 0.2s; }
-        @keyframes fade { from { opacity: 0; } }
-        .modal {
-            width: 100%; max-width: 440px; background: var(--panel);
-            border: 1px solid var(--stroke-hi); border-radius: var(--r-lg);
-            padding: 26px; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.8);
-            animation: rise 0.3s;
-        }
-        .modal h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
-        .modal .msub { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
-        .field { margin-bottom: 16px; }
-        .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 7px; }
-        .field input, .field select {
-            width: 100%; padding: 11px 13px; border-radius: 10px;
-            background: rgba(255,255,255,0.04); border: 1px solid var(--stroke);
-            color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none;
-            transition: border-color 0.2s;
-        }
-        .field input:focus, .field select:focus { border-color: var(--indigo); }
-        .field select option { background: var(--panel); }
-        .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
-        .btn-ghost {
-            flex: 1; padding: 11px; border-radius: 10px; cursor: pointer;
-            background: transparent; border: 1px solid var(--stroke); color: var(--muted);
-            font-weight: 600; font-size: 0.88rem; transition: border-color 0.2s, color 0.2s;
-        }
-        .btn-ghost:hover { border-color: var(--stroke-hi); color: var(--text); }
-        .modal .btn { flex: 1; justify-content: center; }
-        .btn-secondary {
-            display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px;
-            border-radius: 12px; background: var(--surface-hi); border: 1px solid var(--stroke);
-            color: var(--text); font-size: 0.88rem; font-weight: 600; cursor: pointer;
-            transition: border-color 0.2s, transform 0.15s;
-        }
-        .btn-secondary:hover { border-color: var(--stroke-hi); transform: translateY(-2px); }
-        .btn-secondary svg { width: 16px; height: 16px; stroke: currentColor; }
+        .meta { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--stroke); padding-top: 15px; }
+        .meta-item { display: flex; flex-direction: column; gap: 4px; }
+        .meta-item.right { text-align: right; }
+        .meta-label { font-size: 0.69rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+        .meta-value { font-weight: 700; font-size: 0.92rem; }
+        .days-urgent { color: var(--amber); } .days-done { color: var(--green); }
 
-        .local-tag {
-            font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
-            color: var(--violet); background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3);
-            padding: 2px 7px; border-radius: 6px; margin-left: 8px;
-        }
-        .card-del {
-            position: absolute; top: 16px; right: 16px; z-index: 2;
-            width: 26px; height: 26px; border-radius: 7px; cursor: pointer;
-            background: rgba(255,255,255,0.05); border: 1px solid var(--stroke);
-            color: var(--dim); display: none; place-items: center; transition: color 0.2s, border-color 0.2s;
-        }
+        .note { margin-top: 13px; font-size: 0.81rem; color: var(--muted); line-height: 1.45; background: rgba(255,255,255,0.03); border: 1px solid var(--stroke); border-radius: var(--r-sm); padding: 10px 12px; }
+        .links { display: flex; gap: 8px; margin-top: 13px; flex-wrap: wrap; }
+        .link-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 9px; text-decoration: none; font-size: 0.77rem; font-weight: 600; color: var(--muted); background: var(--surface-hi); border: 1px solid var(--stroke); transition: color 0.2s, border-color 0.2s, transform 0.15s; }
+        .link-chip:hover { color: var(--text); border-color: var(--stroke-hi); transform: translateY(-1px); }
+        .link-chip svg { width: 14px; height: 14px; }
+
+        .local-tag { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--violet); background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); padding: 2px 7px; border-radius: 6px; margin-left: 8px; }
+        .card-del { position: absolute; top: 16px; right: 16px; z-index: 2; width: 26px; height: 26px; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--stroke); color: var(--dim); display: none; place-items: center; transition: color 0.2s, border-color 0.2s; }
         .card-del:hover { color: var(--rose); border-color: rgba(251,113,133,0.4); }
         .card.local:hover .card-del { display: grid; }
 
-        footer { text-align: center; margin-top: 56px; color: var(--dim); font-size: 0.8rem; }
+        .empty { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--dim); }
+        .empty svg { width: 40px; height: 40px; stroke: var(--dim); margin-bottom: 12px; }
+        .empty p { font-size: 0.92rem; }
 
-        @media (max-width: 880px) {
+        /* ============ TIMELINE ============ */
+        .timeline { display: flex; flex-direction: column; }
+        .tl-month { display: grid; grid-template-columns: 140px 1fr; gap: 18px; padding: 18px 0; border-top: 1px solid var(--stroke); align-items: start; }
+        .tl-month:first-child { border-top: none; }
+        .tl-mlabel { font-family: var(--display); font-weight: 700; font-size: 0.95rem; }
+        .tl-mcount { font-size: 0.74rem; color: var(--dim); margin-top: 3px; font-weight: 600; }
+        .tl-apps { display: flex; flex-direction: column; gap: 10px; }
+        .tl-app { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--stroke); border-radius: var(--r-sm); padding: 12px 14px; }
+        .tl-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 20px; overflow: hidden; }
+        .tl-bar { height: 100%; border-radius: 20px; background: var(--c, var(--indigo)); }
+        .tl-name { font-weight: 600; font-size: 0.9rem; min-width: 120px; }
+        .tl-days { font-size: 0.8rem; font-weight: 700; min-width: 64px; text-align: right; color: var(--muted); }
+
+        /* ============ MODAL ============ */
+        .modal-overlay { position: fixed; inset: 0; z-index: 60; display: none; background: rgba(4,5,10,0.72); backdrop-filter: blur(7px); align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.open { display: flex; animation: fade 0.2s; }
+        @keyframes fade { from { opacity: 0; } }
+        .modal { width: 100%; max-width: 450px; background: var(--panel); border: 1px solid var(--stroke-hi); border-radius: var(--r-xl); padding: 28px; box-shadow: 0 30px 80px -20px rgba(0,0,0,0.85); animation: rise 0.3s; }
+        .modal h3 { font-family: var(--display); font-size: 1.3rem; font-weight: 800; letter-spacing: -0.02em; }
+        .modal .msub { color: var(--muted); font-size: 0.84rem; margin: 4px 0 22px; line-height: 1.5; }
+        .field { margin-bottom: 16px; }
+        .field label { display: block; font-size: 0.77rem; font-weight: 600; color: var(--muted); margin-bottom: 7px; }
+        .field input, .field select { width: 100%; padding: 12px 13px; border-radius: 11px; background: rgba(255,255,255,0.04); border: 1px solid var(--stroke); color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
+        .field input:focus, .field select:focus { border-color: var(--indigo); }
+        .field select option { background: var(--panel); }
+        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+        .btn-ghost { flex: 1; padding: 12px; border-radius: 11px; cursor: pointer; background: transparent; border: 1px solid var(--stroke); color: var(--muted); font-family: inherit; font-weight: 600; font-size: 0.88rem; transition: border-color 0.2s, color 0.2s; }
+        .btn-ghost:hover { border-color: var(--stroke-hi); color: var(--text); }
+        .modal .btn { flex: 1; justify-content: center; }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 1080px) {
             .bento { grid-template-columns: repeat(2, 1fr); }
             .hero { grid-column: span 2; grid-row: span 1; }
         }
-        @media (max-width: 560px) {
-            body { padding: 28px 14px 60px; }
+        @media (max-width: 860px) {
+            :root { --sidebar-w: 0px; }
+            .sidebar { display: none; }
+            .main::before { inset: 0; }
+            .main-inner { padding: 18px 18px 60px; }
+        }
+        @media (max-width: 620px) {
             .bento { grid-template-columns: 1fr; }
             .hero { grid-column: span 1; }
-            h1 { font-size: 1.55rem; }
-            .hero-metric { font-size: 3.2rem; }
+            .search { width: 150px; }
+            .hero-metric { font-size: 3.3rem; }
+            .row2 { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <header>
+    <div class="app">
+        <!-- ============ SIDEBAR ============ -->
+        <aside class="sidebar">
             <div class="brand">
                 <div class="logo">
                     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -375,101 +325,136 @@
                     </svg>
                 </div>
                 <div>
-                    <h1>Mission Control</h1>
-                    <p class="subtitle">30-Day App Launch Cycle</p>
+                    <div class="brand-name">Mission Control</div>
+                    <div class="brand-sub">Launch Tracker</div>
                 </div>
             </div>
-            <div class="header-actions">
-                <span class="live-chip"><span class="pulse"></span>Live</span>
-                <button class="btn-secondary" onclick="openModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                    Add App
-                </button>
-                <button class="btn" onclick="syncData(this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                        <path d="M3 3v5h5"/>
-                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-                        <path d="M16 16h5v5"/>
-                    </svg>
-                    <span>Sync Data</span>
-                </button>
+
+            <div class="nav-label">Workspace</div>
+            <div class="nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                Dashboard
             </div>
-        </header>
-
-        <!-- ===== BENTO OVERVIEW ===== -->
-        <section class="bento">
-            <!-- Hero north-star metric -->
-            <div class="panel hero" style="animation-delay:0s">
-                <div class="hero-bg"></div>
-                <div class="panel-label"><span class="dot" style="background:var(--indigo)"></span>Portfolio Progress</div>
-                <div class="hero-metric" id="hero-metric">0%</div>
-                <div class="hero-sub"><span class="trend-up">▲ on track</span> &middot; avg across all apps this cycle</div>
-
-                <div class="ring-row" id="ring-row"></div>
-
-                <svg class="spark" id="spark" viewBox="0 0 320 90" preserveAspectRatio="none"></svg>
+            <div class="nav-item" onclick="document.querySelector('#apps-section').scrollIntoView({behavior:'smooth'})">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9z"/></svg>
+                Apps <span class="nav-badge" id="nav-apps">0</span>
+            </div>
+            <div class="nav-item" onclick="document.querySelector('#timeline-section').scrollIntoView({behavior:'smooth'})">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
+                Timeline
             </div>
 
-            <!-- KPI: Active apps + donut -->
-            <div class="panel" style="animation-delay:0.07s">
-                <div class="panel-label"><span class="dot" style="background:var(--sky)"></span>Active Apps</div>
-                <div class="donut-wrap">
-                    <svg width="74" height="74" viewBox="0 0 74 74" id="donut"></svg>
-                    <div>
-                        <div class="kpi-value" id="kpi-total">0</div>
-                        <div class="kpi-sub">in pipeline</div>
+            <div class="nav-label">Connect</div>
+            <div class="nav-item" onclick="syncFromNav()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+                Google Sheets
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>
+                GitHub
+            </div>
+            <div class="nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 3 21 12 3 21 3 3"/></svg>
+                Play Console
+            </div>
+
+            <div class="sidebar-foot">
+                <div class="upgrade">
+                    <h4>Sync live data</h4>
+                    <p>Connect Play Console + GitHub via Apps Script for auto-updates.</p>
+                    <a href="#" onclick="return false">Set up</a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ============ MAIN ============ -->
+        <main class="main">
+            <div class="main-inner">
+                <!-- Topbar -->
+                <div class="topbar">
+                    <div class="page-title">
+                        <h1>Dashboard</h1>
+                        <p>30-Day App Launch Cycle</p>
+                    </div>
+                    <div class="topbar-actions">
+                        <div class="search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input id="search" type="text" placeholder="Search apps…" oninput="applyView()">
+                        </div>
+                        <span class="live-chip"><span class="pulse"></span>Live</span>
+                        <button class="icon-btn" title="Notifications"><span class="ndot"></span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+                        </button>
+                        <button class="btn" onclick="openModal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                            Add App
+                        </button>
                     </div>
                 </div>
+
+                <!-- Bento overview -->
+                <section class="bento">
+                    <div class="panel hero" style="animation-delay:0s">
+                        <div class="hero-bg"></div>
+                        <div class="panel-label"><span class="dot" style="background:var(--indigo)"></span>Portfolio Progress</div>
+                        <div class="hero-metric" id="hero-metric">0%</div>
+                        <div class="hero-sub"><span class="trend-up">▲ on track</span> &middot; avg across all apps this cycle</div>
+                        <div class="ring-row" id="ring-row"></div>
+                        <svg class="spark" id="spark" viewBox="0 0 320 94" preserveAspectRatio="none"></svg>
+                    </div>
+                    <div class="panel" style="animation-delay:0.07s">
+                        <div class="panel-label"><span class="dot" style="background:var(--sky)"></span>Active Apps</div>
+                        <div class="donut-wrap">
+                            <svg width="74" height="74" viewBox="0 0 74 74" id="donut"></svg>
+                            <div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">in pipeline</div></div>
+                        </div>
+                    </div>
+                    <div class="panel" style="animation-delay:0.12s">
+                        <div class="panel-label"><span class="dot" style="background:var(--green)"></span>Shipped</div>
+                        <div class="kpi-value" id="kpi-live">0</div>
+                        <div class="kpi-sub">apps live in stores</div>
+                        <div class="kpi-delta up">▲ live now</div>
+                    </div>
+                    <div class="panel" style="animation-delay:0.17s">
+                        <div class="panel-label"><span class="dot" style="background:var(--amber)"></span>Next Launch</div>
+                        <div class="kpi-value" id="kpi-days">—</div>
+                        <div class="kpi-sub">days to nearest deadline</div>
+                        <div class="kpi-delta down">● upcoming</div>
+                    </div>
+                    <div class="panel" style="animation-delay:0.22s">
+                        <div class="panel-label"><span class="dot" style="background:var(--violet)"></span>In Development</div>
+                        <div class="kpi-value" id="kpi-dev">0</div>
+                        <div class="kpi-sub">building right now</div>
+                        <div class="kpi-delta up">▲ active sprints</div>
+                    </div>
+                </section>
+
+                <!-- Apps -->
+                <div class="section-head" id="apps-section">
+                    <h2>Apps in Pipeline</h2>
+                    <span class="count" id="pipeline-count"></span>
+                    <div class="tabs" id="tabs">
+                        <button class="tab active" data-f="all" onclick="setFilter('all',this)">All</button>
+                        <button class="tab" data-f="badge-live" onclick="setFilter('badge-live',this)">Live</button>
+                        <button class="tab" data-f="badge-dev" onclick="setFilter('badge-dev',this)">In Dev</button>
+                        <button class="tab" data-f="badge-ideation" onclick="setFilter('badge-ideation',this)">Ideation</button>
+                    </div>
+                </div>
+                <div class="grid" id="app-grid"></div>
+
+                <!-- Timeline -->
+                <div class="section-head" id="timeline-section">
+                    <h2>Launch Timeline</h2>
+                    <span class="count" id="timeline-count"></span>
+                </div>
+                <div class="panel" style="animation-delay:0s; padding:8px 24px;">
+                    <div class="timeline" id="timeline"></div>
+                </div>
             </div>
-
-            <!-- KPI: Shipped -->
-            <div class="panel" style="animation-delay:0.12s">
-                <div class="panel-label"><span class="dot" style="background:var(--green)"></span>Shipped</div>
-                <div class="kpi-value" id="kpi-live">0</div>
-                <div class="kpi-sub">apps live in stores</div>
-                <div class="kpi-delta up">▲ +1 this month</div>
-            </div>
-
-            <!-- KPI: Avg days to launch -->
-            <div class="panel" style="animation-delay:0.17s">
-                <div class="panel-label"><span class="dot" style="background:var(--amber)"></span>Next Launch</div>
-                <div class="kpi-value" id="kpi-days">—</div>
-                <div class="kpi-sub" id="kpi-days-sub">days away</div>
-                <div class="kpi-delta down">● nearest deadline</div>
-            </div>
-
-            <!-- KPI: In dev -->
-            <div class="panel" style="animation-delay:0.22s">
-                <div class="panel-label"><span class="dot" style="background:var(--violet)"></span>In Development</div>
-                <div class="kpi-value" id="kpi-dev">0</div>
-                <div class="kpi-sub">building right now</div>
-                <div class="kpi-delta up">▲ active sprints</div>
-            </div>
-        </section>
-
-        <!-- ===== APP CARDS ===== -->
-        <div class="section-head">
-            <h2>Apps in Pipeline</h2>
-            <span class="count" id="pipeline-count"></span>
-        </div>
-        <div class="grid" id="app-grid"></div>
-
-        <!-- ===== TIMELINE ===== -->
-        <div class="section-head">
-            <h2>Launch Timeline</h2>
-            <span class="count" id="timeline-count"></span>
-        </div>
-        <div class="panel" style="animation-delay:0s; padding:8px 24px;">
-            <div class="timeline" id="timeline"></div>
-        </div>
-
-        <footer>Synced from Google Sheets &middot; Local additions stored in browser &middot; Bento layout</footer>
+        </main>
     </div>
 
-    <!-- ===== ADD APP MODAL ===== -->
+    <!-- ============ ADD APP MODAL ============ -->
     <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
         <div class="modal">
             <h3>Add App Idea</h3>
@@ -478,18 +463,20 @@
                 <label>App / Idea Name</label>
                 <input id="f-name" type="text" placeholder="e.g. Habit Tracker" autocomplete="off">
             </div>
-            <div class="field">
-                <label>Target Launch Month</label>
-                <input id="f-launch" type="month">
-            </div>
-            <div class="field">
-                <label>Stage</label>
-                <select id="f-stage">
-                    <option value="Ideation">Ideation</option>
-                    <option value="Backlog">Backlog</option>
-                    <option value="Development">Development</option>
-                    <option value="Live">Live</option>
-                </select>
+            <div class="row2">
+                <div class="field">
+                    <label>Target Month</label>
+                    <input id="f-launch" type="month">
+                </div>
+                <div class="field">
+                    <label>Stage</label>
+                    <select id="f-stage">
+                        <option value="Ideation">Ideation</option>
+                        <option value="Backlog">Backlog</option>
+                        <option value="Development">Development</option>
+                        <option value="Live">Live</option>
+                    </select>
+                </div>
             </div>
             <div class="field">
                 <label>GitHub Link <span style="color:var(--dim)">(optional)</span></label>
@@ -506,18 +493,12 @@
         // ===== Backend: live Google Sheets CSV =====
         const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQSa16eUquaLi-Bxcwf8TsTJyFzb3Ucd_MbQ7V7d6fEwlnQplq_3d6l5Ii883O83kEtKkO7ndfuWN7/pub?gid=237240442&single=true&output=csv";
 
-        // Fallback shown if fetch fails (offline / CORS)
         const fallbackData = [
             { name: "Idea 1", progress: 0, stage: "Ideation", status: "badge-ideation", launch: "July 2026", daysLeft: 19, github: "", privacy: "", notes: "Ready for your first app" }
         ];
 
-        const accent = {
-            "badge-dev": "#fbbf24",
-            "badge-ideation": "#818cf8",
-            "badge-live": "#34d399"
-        };
+        const accent = { "badge-dev": "#fbbf24", "badge-ideation": "#818cf8", "badge-live": "#34d399" };
 
-        // Minimal RFC-4180 CSV parser (handles quoted fields, commas, newlines)
         function parseCSV(text) {
             const rows = []; let row = [], field = "", q = false;
             for (let i = 0; i < text.length; i++) {
@@ -538,279 +519,218 @@
             return rows;
         }
 
-        // Map a sheet stage + published flag to a badge class
         function badgeFor(stage, published) {
             const s = (stage || "").toLowerCase();
             if ((published || "").toLowerCase().startsWith("y") || s.includes("live") || s.includes("publish")) return "badge-live";
             if (s.includes("dev") || s.includes("build") || s.includes("progress") || s.includes("test")) return "badge-dev";
-            return "badge-ideation"; // ideation, backlog, planning, etc.
+            return "badge-ideation";
         }
 
-        // Convert parsed CSV rows -> app objects keyed by header name
         function rowsToApps(rows) {
             if (!rows.length) return [];
             const head = rows[0].map(h => h.trim().toLowerCase());
             const idx = name => head.findIndex(h => h.includes(name));
-            const ci = {
-                name: idx("app name"), prog: idx("progress"), pub: idx("published"),
-                stage: idx("current stage"), launch: idx("target launch"), days: idx("days left"),
-                github: idx("github"), privacy: idx("privacy"), notes: idx("notes")
-            };
-            return rows.slice(1)
-                .filter(r => (r[ci.name] || "").trim())
-                .map(r => {
-                    const stage = (r[ci.stage] || "").trim() || "Ideation";
-                    const pub = (r[ci.pub] || "").trim();
-                    return {
-                        name: (r[ci.name] || "").trim(),
-                        progress: parseInt((r[ci.prog] || "0").replace(/[^\d]/g, ""), 10) || 0,
-                        stage,
-                        status: badgeFor(stage, pub),
-                        launch: (r[ci.launch] || "—").trim(),
-                        daysLeft: parseInt((r[ci.days] || "0").replace(/[^\d-]/g, ""), 10) || 0,
-                        github: (r[ci.github] || "").trim(),
-                        privacy: (r[ci.privacy] || "").trim(),
-                        notes: (r[ci.notes] || "").trim()
-                    };
-                });
+            const ci = { name: idx("app name"), prog: idx("progress"), pub: idx("published"), stage: idx("current stage"), launch: idx("target launch"), days: idx("days left"), github: idx("github"), privacy: idx("privacy"), notes: idx("notes") };
+            return rows.slice(1).filter(r => (r[ci.name] || "").trim()).map(r => {
+                const stage = (r[ci.stage] || "").trim() || "Ideation";
+                const pub = (r[ci.pub] || "").trim();
+                return {
+                    name: (r[ci.name] || "").trim(),
+                    progress: parseInt((r[ci.prog] || "0").replace(/[^\d]/g, ""), 10) || 0,
+                    stage, status: badgeFor(stage, pub),
+                    launch: (r[ci.launch] || "—").trim(),
+                    daysLeft: parseInt((r[ci.days] || "0").replace(/[^\d-]/g, ""), 10) || 0,
+                    github: (r[ci.github] || "").trim(), privacy: (r[ci.privacy] || "").trim(), notes: (r[ci.notes] || "").trim()
+                };
+            });
         }
 
-        // ---- Local additions (browser storage) ----
+        function consoleStatus(app) {
+            const s = (app.stage || "").toLowerCase(), n = (app.notes || "").toLowerCase();
+            if (app.status === "badge-live" || s.includes("live") || s.includes("publish")) return { t: "Live", c: "console-live" };
+            if (s.includes("review") || s.includes("pending") || n.includes("review") || n.includes("submitted")) return { t: "Pending", c: "console-pending" };
+            if (app.status === "badge-dev" || s.includes("dev") || s.includes("build") || s.includes("test")) return { t: "Draft", c: "console-draft" };
+            return null;
+        }
+        function githubState(app) {
+            return app.github ? { t: "Repo synced", c: "gh-synced" } : { t: "No repo", c: "gh-none" };
+        }
+
+        // ---- Local additions ----
         const LS_KEY = "missioncontrol_local_apps";
         const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } };
         const saveLocal = arr => localStorage.setItem(LS_KEY, JSON.stringify(arr));
 
-        let sheetApps = [];               // last data pulled from the sheet
+        let sheetApps = [];
+        let filter = "all";
         const merged = () => [...sheetApps, ...loadLocal()];
 
-        // Console (Play Store) stage: Draft / Pending / Live / —
-        function consoleStatus(app) {
-            const s = (app.stage || "").toLowerCase();
-            const n = (app.notes || "").toLowerCase();
-            if (app.status === "badge-live" || s.includes("live") || s.includes("publish")) return { t: "Live", c: "console-live" };
-            if (s.includes("review") || s.includes("pending") || n.includes("review") || n.includes("submitted")) return { t: "Pending", c: "console-pending" };
-            if (app.status === "badge-dev" || s.includes("dev") || s.includes("build") || s.includes("test")) return { t: "Draft", c: "console-draft" };
-            return null; // not on console yet (ideation/backlog)
-        }
-
-        // GitHub sync state from repo link presence
-        function githubState(app) {
-            return app.github
-                ? { t: "Repo synced", c: "gh-synced", linked: true }
-                : { t: "No repo", c: "gh-none", linked: false };
-        }
-
-        // Bootstrap: fetch live, fall back on error, merge local
         async function loadAndRender() {
             try {
                 const res = await fetch(SHEET_CSV, { cache: "no-store" });
-                if (res.ok) {
-                    const apps = rowsToApps(parseCSV(await res.text()));
-                    sheetApps = apps.length ? apps : fallbackData;
-                } else sheetApps = fallbackData;
-            } catch (e) {
-                console.warn("Sheet fetch failed, using fallback:", e);
-                if (!sheetApps.length) sheetApps = fallbackData;
-            }
+                if (res.ok) { const apps = rowsToApps(parseCSV(await res.text())); sheetApps = apps.length ? apps : fallbackData; }
+                else sheetApps = fallbackData;
+            } catch (e) { console.warn("Sheet fetch failed:", e); if (!sheetApps.length) sheetApps = fallbackData; }
             render(merged());
         }
         loadAndRender();
 
+        // ===== RENDER =====
         function render(appData) {
-        const total = appData.length;
-        const live = appData.filter(a => a.status === "badge-live").length;
-        const dev = appData.filter(a => a.status === "badge-dev").length;
-        const ideas = appData.filter(a => a.status === "badge-ideation").length;
-        const avg = Math.round(appData.reduce((s, a) => s + a.progress, 0) / total);
-        const nextDays = Math.min(...appData.filter(a => a.daysLeft > 0).map(a => a.daysLeft).concat([0]).filter(n => n > 0));
+            const total = appData.length;
+            const live = appData.filter(a => a.status === "badge-live").length;
+            const dev = appData.filter(a => a.status === "badge-dev").length;
+            const ideas = appData.filter(a => a.status === "badge-ideation").length;
+            const avg = total ? Math.round(appData.reduce((s, a) => s + a.progress, 0) / total) : 0;
+            const upcoming = appData.filter(a => a.daysLeft > 0).map(a => a.daysLeft);
+            const nextDays = upcoming.length ? Math.min(...upcoming) : 0;
 
-        /* ---- Hero ---- */
-        document.getElementById('ring-row').innerHTML = `
-            <div class="ring-stat"><div><div class="num" style="color:var(--green)">${live}</div><div class="lbl">Live</div></div></div>
-            <div class="ring-stat"><div><div class="num" style="color:var(--amber)">${dev}</div><div class="lbl">In dev</div></div></div>
-            <div class="ring-stat"><div><div class="num" style="color:var(--indigo)">${ideas}</div><div class="lbl">Ideas</div></div></div>`;
+            document.getElementById('ring-row').innerHTML = `
+                <div class="ring-stat"><div class="num" style="color:var(--green)">${live}</div><div class="lbl">Live</div></div>
+                <div class="ring-stat"><div class="num" style="color:var(--amber)">${dev}</div><div class="lbl">In dev</div></div>
+                <div class="ring-stat"><div class="num" style="color:var(--indigo)">${ideas}</div><div class="lbl">Ideas</div></div>`;
+            document.getElementById('kpi-total').textContent = total;
+            document.getElementById('kpi-live').textContent = live;
+            document.getElementById('kpi-dev').textContent = dev;
+            document.getElementById('kpi-days').textContent = nextDays || '0';
+            document.getElementById('pipeline-count').textContent = total + ' apps';
+            document.getElementById('nav-apps').textContent = total;
 
-        document.getElementById('kpi-total').textContent = total;
-        document.getElementById('kpi-live').textContent = live;
-        document.getElementById('kpi-dev').textContent = dev;
-        document.getElementById('kpi-days').textContent = nextDays || '0';
-        document.getElementById('pipeline-count').textContent = total + ' apps';
+            // animated hero number
+            (function countUp() {
+                const el = document.getElementById('hero-metric'); let cur = 0;
+                const t = setInterval(() => { cur += Math.max(1, Math.ceil(avg / 28)); if (cur >= avg) { cur = avg; clearInterval(t); } el.textContent = cur + '%'; }, 26);
+            })();
 
-        /* ---- Animated hero number ---- */
-        (function countUp() {
-            const el = document.getElementById('hero-metric');
-            let cur = 0;
-            const t = setInterval(() => {
-                cur += Math.ceil(avg / 28);
-                if (cur >= avg) { cur = avg; clearInterval(t); }
-                el.textContent = cur + '%';
-            }, 26);
-        })();
+            // sparkline
+            (function spark() {
+                const pts = [22, 30, 28, 41, 38, 52, 49, 63, 60, 71, avg];
+                const w = 320, h = 94, max = 100, pad = 6, step = w / (pts.length - 1);
+                const x = i => i * step, y = v => h - pad - (v / max) * (h - pad * 2);
+                let d = `M ${x(0)} ${y(pts[0])}`;
+                for (let i = 1; i < pts.length; i++) { const xc = (x(i - 1) + x(i)) / 2; d += ` Q ${xc} ${y(pts[i - 1])} ${x(i)} ${y(pts[i])}`; }
+                document.getElementById('spark').innerHTML = `
+                    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.45"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+                    <path d="${d} L ${w} ${h} L 0 ${h} Z" fill="url(#sg)"/>
+                    <path d="${d}" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="${x(pts.length - 1)}" cy="${y(avg)}" r="4" fill="#fff" stroke="#6366f1" stroke-width="2.5"/>`;
+            })();
 
-        /* ---- Sparkline (smooth area) ---- */
-        (function spark() {
-            const pts = [22, 30, 28, 41, 38, 52, 49, 63, 60, 71, avg];
-            const w = 320, h = 90, max = 100, pad = 6;
-            const step = w / (pts.length - 1);
-            const x = i => i * step;
-            const y = v => h - pad - (v / max) * (h - pad * 2);
-            let d = `M ${x(0)} ${y(pts[0])}`;
-            for (let i = 1; i < pts.length; i++) {
-                const xc = (x(i - 1) + x(i)) / 2;
-                d += ` Q ${xc} ${y(pts[i - 1])} ${x(i)} ${y(pts[i])}`;
+            // donut
+            (function donut() {
+                const segs = [{ v: live, c: "#34d399" }, { v: dev, c: "#fbbf24" }, { v: ideas, c: "#818cf8" }].filter(s => s.v > 0);
+                const sum = segs.reduce((a, s) => a + s.v, 0) || 1, R = 30, C = 2 * Math.PI * R, cx = 37, cy = 37;
+                let off = 0, rings = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>`;
+                segs.forEach(s => { const len = (s.v / sum) * C; rings += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.c}" stroke-width="8" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round"/>`; off += len; });
+                document.getElementById('donut').innerHTML = rings + `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="#f6f7fb" font-size="16" font-weight="800">${total}</text>`;
+            })();
+
+            applyView();
+            renderTimeline(appData);
+        }
+
+        // ===== Filter + search =====
+        function setFilter(f, btn) {
+            filter = f;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            applyView();
+        }
+        function applyView() {
+            const q = (document.getElementById('search').value || "").toLowerCase().trim();
+            let apps = merged();
+            if (filter !== "all") apps = apps.filter(a => a.status === filter);
+            if (q) apps = apps.filter(a => a.name.toLowerCase().includes(q) || (a.stage || "").toLowerCase().includes(q));
+            renderCards(apps);
+        }
+
+        function renderCards(appData) {
+            const grid = document.getElementById('app-grid');
+            grid.innerHTML = '';
+            if (!appData.length) {
+                grid.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><p>No apps match.</p></div>`;
+                return;
             }
-            const area = d + ` L ${w} ${h} L 0 ${h} Z`;
-            document.getElementById('spark').innerHTML = `
-                <defs>
-                    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#6366f1" stop-opacity="0.45"/>
-                        <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-                    </linearGradient>
-                </defs>
-                <path d="${area}" fill="url(#sg)"/>
-                <path d="${d}" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round"/>
-                <circle cx="${x(pts.length - 1)}" cy="${y(avg)}" r="4" fill="#fff" stroke="#6366f1" stroke-width="2.5"/>`;
-        })();
+            appData.forEach((app, i) => {
+                const c = accent[app.status] || "#818cf8";
+                const daysClass = app.daysLeft === 0 ? "days-done" : (app.daysLeft <= 21 ? "days-urgent" : "");
+                const daysText = app.daysLeft === 0 ? "Shipped ✓" : app.daysLeft + " days";
+                const initials = app.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                const cs = consoleStatus(app), gh = githubState(app);
 
-        /* ---- Donut (live vs dev vs ideas) ---- */
-        (function donut() {
-            const segs = [
-                { v: live, c: "#34d399" },
-                { v: dev, c: "#fbbf24" },
-                { v: ideas, c: "#818cf8" }
-            ].filter(s => s.v > 0);
-            const sum = segs.reduce((a, s) => a + s.v, 0) || 1;
-            const R = 30, C = 2 * Math.PI * R, cx = 37, cy = 37;
-            let off = 0;
-            let rings = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="8"/>`;
-            segs.forEach(s => {
-                const len = (s.v / sum) * C;
-                rings += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${s.c}" stroke-width="8"
-                    stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}"
-                    transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round"/>`;
-                off += len;
-            });
-            document.getElementById('donut').innerHTML = rings +
-                `<text x="${cx}" y="${cy + 5}" text-anchor="middle" fill="#f5f6fb" font-size="16" font-weight="800">${total}</text>`;
-        })();
-
-        /* ---- App cards ---- */
-        const grid = document.getElementById('app-grid');
-        grid.innerHTML = '';
-        appData.forEach((app, i) => {
-            const c = accent[app.status] || "#818cf8";
-            const daysClass = app.daysLeft === 0 ? "days-done" : (app.daysLeft <= 21 ? "days-urgent" : "");
-            const daysText = app.daysLeft === 0 ? "Shipped ✓" : app.daysLeft + " days";
-            const initials = app.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-
-            const cs = consoleStatus(app);
-            const gh = githubState(app);
-
-            const card = document.createElement('div');
-            card.className = 'card' + (app.local ? ' local' : '');
-            card.style.setProperty('--c', c);
-            card.style.animationDelay = (0.25 + i * 0.07) + 's';
-            card.innerHTML = `
-                ${app.local ? `<div class="card-del" title="Remove" onclick="deleteLocal('${app.lid}')">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                </div>` : ''}
-                <div class="card-header">
-                    <div class="app-row">
-                        <div class="app-icon">${initials}</div>
-                        <div>
-                            <div class="app-name">${app.name}${app.local ? '<span class="local-tag">Local</span>' : ''}</div>
-                            <div class="app-id">#APP-${String(i + 1).padStart(3, '0')}</div>
+                const card = document.createElement('div');
+                card.className = 'card' + (app.local ? ' local' : '');
+                card.style.setProperty('--c', c);
+                card.style.animationDelay = (i * 0.06) + 's';
+                card.innerHTML = `
+                    ${app.local ? `<div class="card-del" title="Remove" onclick="deleteLocal('${app.lid}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>` : ''}
+                    <div class="card-header">
+                        <div class="app-row">
+                            <div class="app-icon">${initials}</div>
+                            <div>
+                                <div class="app-name">${app.name}${app.local ? '<span class="local-tag">Local</span>' : ''}</div>
+                                <div class="app-id">#APP-${String(i + 1).padStart(3, '0')}</div>
+                            </div>
                         </div>
+                        <div class="badge ${app.status}">${app.stage}</div>
                     </div>
-                    <div class="badge ${app.status}">${app.stage}</div>
-                </div>
-                <div class="status-row">
-                    ${cs ? `<span class="pill ${cs.c}"><span class="sdot" style="background:currentColor"></span>Console: ${cs.t}</span>`
-                         : `<span class="pill"><span class="sdot" style="background:var(--dim)"></span>Not on console</span>`}
-                    <span class="pill ${gh.c}">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>
-                        ${gh.t}</span>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-label"><span>Progress</span><b>${app.progress}%</b></div>
-                    <div class="progress-bar-bg"><div class="progress-bar-fill" data-w="${app.progress}"></div></div>
-                </div>
-                <div class="meta">
-                    <div class="meta-item">
-                        <span class="meta-label">Target Launch</span>
-                        <span class="meta-value">${app.launch}</span>
+                    <div class="status-row">
+                        ${cs ? `<span class="pill ${cs.c}"><span class="sdot" style="background:currentColor"></span>Console: ${cs.t}</span>` : `<span class="pill"><span class="sdot" style="background:var(--dim)"></span>Not on console</span>`}
+                        <span class="pill ${gh.c}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>${gh.t}</span>
                     </div>
-                    <div class="meta-item right">
-                        <span class="meta-label">Days Left</span>
-                        <span class="meta-value ${daysClass}">${daysText}</span>
+                    <div class="progress-container">
+                        <div class="progress-label"><span>Progress</span><b>${app.progress}%</b></div>
+                        <div class="progress-bar-bg"><div class="progress-bar-fill" data-w="${app.progress}"></div></div>
                     </div>
-                </div>
-                ${app.notes ? `<div class="note">${app.notes}</div>` : ''}
-                ${(app.github || app.privacy) ? `<div class="links">
-                    ${app.github ? `<a href="${app.github}" target="_blank" rel="noopener" class="link-chip">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>Code</a>` : ''}
-                    ${app.privacy ? `<a href="${app.privacy}" target="_blank" rel="noopener" class="link-chip">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Privacy</a>` : ''}
-                </div>` : ''}`;
-            grid.appendChild(card);
-        });
-
-        /* ---- Timeline (grouped by launch month, sorted) ---- */
-        renderTimeline(appData);
-
-        requestAnimationFrame(() => setTimeout(() => {
-            document.querySelectorAll('.progress-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
-        }, 350));
-        } // end render()
+                    <div class="meta">
+                        <div class="meta-item"><span class="meta-label">Target Launch</span><span class="meta-value">${app.launch}</span></div>
+                        <div class="meta-item right"><span class="meta-label">Days Left</span><span class="meta-value ${daysClass}">${daysText}</span></div>
+                    </div>
+                    ${app.notes ? `<div class="note">${app.notes}</div>` : ''}
+                    ${(app.github || app.privacy) ? `<div class="links">
+                        ${app.github ? `<a href="${app.github}" target="_blank" rel="noopener" class="link-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>Code</a>` : ''}
+                        ${app.privacy ? `<a href="${app.privacy}" target="_blank" rel="noopener" class="link-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Privacy</a>` : ''}
+                    </div>` : ''}`;
+                grid.appendChild(card);
+            });
+            requestAnimationFrame(() => setTimeout(() => {
+                document.querySelectorAll('.progress-bar-fill').forEach(el => el.style.width = el.dataset.w + '%');
+            }, 200));
+        }
 
         function renderTimeline(apps) {
-            const tl = document.getElementById('timeline');
-            const groups = {};
+            const tl = document.getElementById('timeline'), groups = {};
             apps.forEach(a => { (groups[a.launch] = groups[a.launch] || []).push(a); });
-            // sort months chronologically by min daysLeft in group
-            const order = Object.keys(groups).sort((x, y) => {
-                const mx = Math.min(...groups[x].map(a => a.daysLeft || 0));
-                const my = Math.min(...groups[y].map(a => a.daysLeft || 0));
-                return mx - my;
-            });
+            const order = Object.keys(groups).sort((x, y) => Math.min(...groups[x].map(a => a.daysLeft || 0)) - Math.min(...groups[y].map(a => a.daysLeft || 0)));
             tl.innerHTML = order.map(month => {
                 const list = groups[month];
                 const rows = list.map(a => {
                     const c = accent[a.status] || "#818cf8";
-                    const days = a.daysLeft === 0 ? '<span style="color:var(--green)">Shipped</span>'
-                        : (a.daysLeft <= 21 ? `<span style="color:var(--amber)">${a.daysLeft}d</span>` : `${a.daysLeft}d`);
-                    return `<div class="tl-app">
-                        <span class="tl-name">${a.name}</span>
-                        <div class="tl-bar-wrap"><div class="tl-bar" style="width:${a.progress}%;--c:${c}"></div></div>
-                        <span class="tl-days">${days}</span>
-                    </div>`;
+                    const days = a.daysLeft === 0 ? '<span style="color:var(--green)">Shipped</span>' : (a.daysLeft <= 21 ? `<span style="color:var(--amber)">${a.daysLeft}d</span>` : `${a.daysLeft}d`);
+                    return `<div class="tl-app"><span class="tl-name">${a.name}</span><div class="tl-bar-wrap"><div class="tl-bar" style="width:${a.progress}%;--c:${c}"></div></div><span class="tl-days">${days}</span></div>`;
                 }).join('');
-                return `<div class="tl-month">
-                    <div><div class="tl-mlabel">${month}</div><div class="tl-mcount">${list.length} app${list.length > 1 ? 's' : ''}</div></div>
-                    <div class="tl-apps">${rows}</div>
-                </div>`;
+                return `<div class="tl-month"><div><div class="tl-mlabel">${month}</div><div class="tl-mcount">${list.length} app${list.length > 1 ? 's' : ''}</div></div><div class="tl-apps">${rows}</div></div>`;
             }).join('');
             document.getElementById('timeline-count').textContent = order.length + ' months';
         }
 
+        // ===== Sync =====
         function syncData(btn) {
-            const svg = btn.querySelector('svg'), txt = btn.querySelector('span'), orig = txt.textContent;
-            svg.style.transition = 'transform 0.8s ease';
-            svg.style.transform = 'rotate(360deg)';
-            txt.textContent = 'Syncing…';
-            fetch(SHEET_CSV, { cache: "no-store" })
-                .then(r => r.text())
-                .then(t => { const a = rowsToApps(parseCSV(t)); if (a.length) sheetApps = a; render(merged()); txt.textContent = 'Synced ✓'; })
-                .catch(() => { txt.textContent = 'Offline'; })
-                .finally(() => setTimeout(() => { txt.textContent = orig; svg.style.transform = 'rotate(0deg)'; }, 1200));
+            const svg = btn.querySelector('svg'), txt = btn.querySelector('span'), orig = txt ? txt.textContent : '';
+            if (svg) { svg.style.transition = 'transform 0.8s ease'; svg.style.transform = 'rotate(360deg)'; }
+            if (txt) txt.textContent = 'Syncing…';
+            fetch(SHEET_CSV, { cache: "no-store" }).then(r => r.text())
+                .then(t => { const a = rowsToApps(parseCSV(t)); if (a.length) sheetApps = a; render(merged()); if (txt) txt.textContent = 'Synced ✓'; })
+                .catch(() => { if (txt) txt.textContent = 'Offline'; })
+                .finally(() => setTimeout(() => { if (txt) txt.textContent = orig; if (svg) svg.style.transform = 'rotate(0deg)'; }, 1200));
         }
+        function syncFromNav() { loadAndRender(); }
 
-        /* ---- Add App modal ---- */
+        // ===== Modal =====
         function openModal() { document.getElementById('modal').classList.add('open'); document.getElementById('f-name').focus(); }
         function closeModal() { document.getElementById('modal').classList.remove('open'); }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-        // Month input "2026-08" -> "August 2026", and days-left from today
         function monthLabel(val) {
             if (!val) return "—";
             const [y, m] = val.split('-').map(Number);
@@ -820,40 +740,30 @@
         function daysToMonth(val) {
             if (!val) return 0;
             const [y, m] = val.split('-').map(Number);
-            const target = new Date(y, m - 1, 1), now = new Date();
-            now.setHours(0,0,0,0);
+            const target = new Date(y, m - 1, 1), now = new Date(); now.setHours(0, 0, 0, 0);
             return Math.max(0, Math.round((target - now) / 86400000));
         }
-
         function addApp() {
             const name = document.getElementById('f-name').value.trim();
             const launchVal = document.getElementById('f-launch').value;
             const stage = document.getElementById('f-stage').value;
             const github = document.getElementById('f-github').value.trim();
             if (!name) { document.getElementById('f-name').focus(); return; }
-
+            const arr = loadLocal();
             const app = {
-                name,
-                progress: stage === "Live" ? 100 : 0,
-                stage,
+                name, progress: stage === "Live" ? 100 : 0, stage,
                 status: badgeFor(stage, stage === "Live" ? "Yes" : "No"),
                 launch: monthLabel(launchVal),
                 daysLeft: stage === "Live" ? 0 : daysToMonth(launchVal),
-                github, privacy: "", notes: "",
-                local: true,
-                lid: "L" + (loadLocal().length + 1) + "_" + name.replace(/\W/g, '').slice(0, 8) + "_" + (loadLocal().reduce((s, a) => s + a.name.length, 0))
+                github, privacy: "", notes: "", local: true,
+                lid: "L_" + name.replace(/\W/g, '').slice(0, 8) + "_" + arr.length + "_" + Date.now()
             };
-            const arr = loadLocal(); arr.push(app); saveLocal(arr);
+            arr.push(app); saveLocal(arr);
             closeModal();
-            // reset form
-            ['f-name','f-launch','f-github'].forEach(id => document.getElementById(id).value = '');
+            ['f-name', 'f-launch', 'f-github'].forEach(id => document.getElementById(id).value = '');
             render(merged());
         }
-
-        function deleteLocal(lid) {
-            saveLocal(loadLocal().filter(a => a.lid !== lid));
-            render(merged());
-        }
+        function deleteLocal(lid) { saveLocal(loadLocal().filter(a => a.lid !== lid)); render(merged()); }
     </script>
 </body>
 
