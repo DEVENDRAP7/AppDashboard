@@ -253,7 +253,7 @@
         .local-tag { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--violet); background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); padding: 2px 7px; border-radius: 6px; margin-left: 8px; }
         .card-del { position: absolute; top: 16px; right: 16px; z-index: 2; width: 26px; height: 26px; border-radius: 7px; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--stroke); color: var(--dim); display: none; place-items: center; transition: color 0.2s, border-color 0.2s; }
         .card-del:hover { color: var(--rose); border-color: rgba(251,113,133,0.4); }
-        .card.local:hover .card-del { display: grid; }
+        .card.has-del:hover .card-del { display: grid; }
 
         .empty { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--dim); }
         .empty svg { width: 40px; height: 40px; stroke: var(--dim); margin-bottom: 12px; }
@@ -482,6 +482,14 @@
                 <label>GitHub Link <span style="color:var(--dim)">(optional)</span></label>
                 <input id="f-github" type="url" placeholder="https://github.com/you/repo" autocomplete="off">
             </div>
+            <div class="field">
+                <label>Firebase Link <span style="color:var(--dim)">(optional)</span></label>
+                <input id="f-firebase" type="url" placeholder="https://console.firebase.google.com/project/..." autocomplete="off">
+            </div>
+            <div class="field">
+                <label>Privacy Policy Link <span style="color:var(--dim)">(optional)</span></label>
+                <input id="f-privacy" type="url" placeholder="https://yoursite.com/privacy" autocomplete="off">
+            </div>
             <div class="modal-actions">
                 <button class="btn-ghost" onclick="closeModal()">Cancel</button>
                 <button class="btn" onclick="addApp()"><span>Add App</span></button>
@@ -490,8 +498,14 @@
     </div>
 
     <script>
-        // ===== Backend: live Google Sheets CSV =====
+        // ===== Backend: Google Sheets =====
+        // Read endpoint (published CSV) — used when no Apps Script URL is set.
         const SHEET_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQSa16eUquaLi-Bxcwf8TsTJyFzb3Ucd_MbQ7V7d6fEwlnQplq_3d6l5Ii883O83kEtKkO7ndfuWN7/pub?gid=237240442&single=true&output=csv";
+
+        // Read + WRITE endpoint (Apps Script Web App /exec URL).
+        // Paste your deployed URL here to let the page add/edit/delete in the real sheet.
+        // Leave "" to keep browser-only adds. See SETUP.md for the 2-minute steps.
+        const GAS_URL = "";
 
         const fallbackData = [
             { name: "Idea 1", progress: 0, stage: "Ideation", status: "badge-ideation", launch: "July 2026", daysLeft: 19, github: "", privacy: "", notes: "Ready for your first app" }
@@ -530,17 +544,18 @@
             if (!rows.length) return [];
             const head = rows[0].map(h => h.trim().toLowerCase());
             const idx = name => head.findIndex(h => h.includes(name));
-            const ci = { name: idx("app name"), prog: idx("progress"), pub: idx("published"), stage: idx("current stage"), launch: idx("target launch"), days: idx("days left"), github: idx("github"), privacy: idx("privacy"), notes: idx("notes") };
-            return rows.slice(1).filter(r => (r[ci.name] || "").trim()).map(r => {
-                const stage = (r[ci.stage] || "").trim() || "Ideation";
-                const pub = (r[ci.pub] || "").trim();
+            const ci = { name: idx("app name"), prog: idx("progress"), pub: idx("published"), stage: idx("current stage"), launch: idx("target launch"), days: idx("days left"), github: idx("github"), firebase: idx("firebase"), privacy: idx("privacy"), notes: idx("notes") };
+            const get = (r, k) => k > -1 ? String(r[k] == null ? "" : r[k]).trim() : "";
+            return rows.slice(1).filter(r => get(r, ci.name)).map(r => {
+                const stage = get(r, ci.stage) || "Ideation";
+                const pub = get(r, ci.pub);
                 return {
-                    name: (r[ci.name] || "").trim(),
-                    progress: parseInt((r[ci.prog] || "0").replace(/[^\d]/g, ""), 10) || 0,
+                    name: get(r, ci.name),
+                    progress: parseInt(get(r, ci.prog).replace(/[^\d]/g, ""), 10) || 0,
                     stage, status: badgeFor(stage, pub),
-                    launch: (r[ci.launch] || "—").trim(),
-                    daysLeft: parseInt((r[ci.days] || "0").replace(/[^\d-]/g, ""), 10) || 0,
-                    github: (r[ci.github] || "").trim(), privacy: (r[ci.privacy] || "").trim(), notes: (r[ci.notes] || "").trim()
+                    launch: get(r, ci.launch) || "—",
+                    daysLeft: parseInt(get(r, ci.days).replace(/[^\d-]/g, ""), 10) || 0,
+                    github: get(r, ci.github), firebase: get(r, ci.firebase), privacy: get(r, ci.privacy), notes: get(r, ci.notes)
                 };
             });
         }
@@ -567,11 +582,29 @@
 
         async function loadAndRender() {
             try {
-                const res = await fetch(SHEET_CSV, { cache: "no-store" });
-                if (res.ok) { const apps = rowsToApps(parseCSV(await res.text())); sheetApps = apps.length ? apps : fallbackData; }
-                else sheetApps = fallbackData;
+                if (GAS_URL) {
+                    // Live read + write path (Apps Script returns a 2D array incl. header row)
+                    const res = await fetch(GAS_URL, { cache: "no-store" });
+                    const rows = await res.json();
+                    const apps = rowsToApps(rows);
+                    sheetApps = apps.length ? apps : fallbackData;
+                } else {
+                    const res = await fetch(SHEET_CSV, { cache: "no-store" });
+                    if (res.ok) { const apps = rowsToApps(parseCSV(await res.text())); sheetApps = apps.length ? apps : fallbackData; }
+                    else sheetApps = fallbackData;
+                }
             } catch (e) { console.warn("Sheet fetch failed:", e); if (!sheetApps.length) sheetApps = fallbackData; }
             render(merged());
+        }
+
+        // POST a write (add/update/delete) to the Apps Script endpoint.
+        // text/plain keeps it a "simple" CORS request (no preflight). We reload after.
+        async function sheetWrite(action, data) {
+            if (!GAS_URL) return false;
+            try {
+                await fetch(GAS_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action, data }) });
+                return true;
+            } catch (e) { console.warn("Sheet write failed:", e); return false; }
         }
         loadAndRender();
 
@@ -658,12 +691,14 @@
                 const initials = app.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
                 const cs = consoleStatus(app), gh = githubState(app);
 
+                const delable = app.local || !!GAS_URL;
+                const delHandler = app.local ? `deleteLocal('${app.lid}')` : `deleteSheet(${JSON.stringify(app.name)})`;
                 const card = document.createElement('div');
-                card.className = 'card' + (app.local ? ' local' : '');
+                card.className = 'card' + (delable ? ' has-del' : '') + (app.local ? ' local' : '');
                 card.style.setProperty('--c', c);
                 card.style.animationDelay = (i * 0.06) + 's';
                 card.innerHTML = `
-                    ${app.local ? `<div class="card-del" title="Remove" onclick="deleteLocal('${app.lid}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>` : ''}
+                    ${delable ? `<div class="card-del" title="Remove" onclick="${delHandler}"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>` : ''}
                     <div class="card-header">
                         <div class="app-row">
                             <div class="app-icon">${initials}</div>
@@ -687,8 +722,9 @@
                         <div class="meta-item right"><span class="meta-label">Days Left</span><span class="meta-value ${daysClass}">${daysText}</span></div>
                     </div>
                     ${app.notes ? `<div class="note">${app.notes}</div>` : ''}
-                    ${(app.github || app.privacy) ? `<div class="links">
+                    ${(app.github || app.firebase || app.privacy) ? `<div class="links">
                         ${app.github ? `<a href="${app.github}" target="_blank" rel="noopener" class="link-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>Code</a>` : ''}
+                        ${app.firebase ? `<a href="${app.firebase}" target="_blank" rel="noopener" class="link-chip" style="color:#fbbf24"><svg viewBox="0 0 24 24" fill="currentColor"><path d="m3.89 15.67 2.04-13.1c.06-.4.6-.49.78-.13l2.2 4.1zM20.4 17.2l-1.84-11.4a.42.42 0 0 0-.71-.23L3.6 19.78l7.86 4.41c.5.28 1.1.28 1.6 0l7.05-3.96a.84.84 0 0 0 .29-1.03zM14.3 7.78l-1.58-3a.42.42 0 0 0-.74 0L5.1 17.1z"/></svg>Firebase</a>` : ''}
                         ${app.privacy ? `<a href="${app.privacy}" target="_blank" rel="noopener" class="link-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Privacy</a>` : ''}
                     </div>` : ''}`;
                 grid.appendChild(card);
@@ -743,27 +779,51 @@
             const target = new Date(y, m - 1, 1), now = new Date(); now.setHours(0, 0, 0, 0);
             return Math.max(0, Math.round((target - now) / 86400000));
         }
-        function addApp() {
+        async function addApp() {
             const name = document.getElementById('f-name').value.trim();
             const launchVal = document.getElementById('f-launch').value;
             const stage = document.getElementById('f-stage').value;
             const github = document.getElementById('f-github').value.trim();
+            const firebase = document.getElementById('f-firebase').value.trim();
+            const privacy = document.getElementById('f-privacy').value.trim();
             if (!name) { document.getElementById('f-name').focus(); return; }
+
+            const progress = stage === "Live" ? 100 : 0;
+            const launch = monthLabel(launchVal);
+            const daysLeft = stage === "Live" ? 0 : daysToMonth(launchVal);
+            const reset = () => ['f-name', 'f-launch', 'f-github', 'f-firebase', 'f-privacy'].forEach(id => document.getElementById(id).value = '');
+
+            if (GAS_URL) {
+                // Permanent: write to the real Google Sheet (header-mapped on the script side)
+                await sheetWrite('add', {
+                    "App Name": name, "Progress (%)": progress + "%", "Published?": stage === "Live" ? "Yes" : "No",
+                    "Current Stage": stage, "Target Launch": launch, "Days Left": daysLeft,
+                    "GitHub Link": github, "Firebase Link": firebase, "Privacy Policy Link": privacy, "Notes": ""
+                });
+                closeModal(); reset();
+                setTimeout(loadAndRender, 600); // let the sheet commit, then refresh
+                return;
+            }
+
+            // Fallback: browser-only
             const arr = loadLocal();
-            const app = {
-                name, progress: stage === "Live" ? 100 : 0, stage,
-                status: badgeFor(stage, stage === "Live" ? "Yes" : "No"),
-                launch: monthLabel(launchVal),
-                daysLeft: stage === "Live" ? 0 : daysToMonth(launchVal),
-                github, privacy: "", notes: "", local: true,
+            arr.push({
+                name, progress, stage, status: badgeFor(stage, stage === "Live" ? "Yes" : "No"),
+                launch, daysLeft, github, firebase, privacy, notes: "", local: true,
                 lid: "L_" + name.replace(/\W/g, '').slice(0, 8) + "_" + arr.length + "_" + Date.now()
-            };
-            arr.push(app); saveLocal(arr);
-            closeModal();
-            ['f-name', 'f-launch', 'f-github'].forEach(id => document.getElementById(id).value = '');
+            });
+            saveLocal(arr);
+            closeModal(); reset();
             render(merged());
         }
+
         function deleteLocal(lid) { saveLocal(loadLocal().filter(a => a.lid !== lid)); render(merged()); }
+        async function deleteSheet(name) {
+            if (!GAS_URL) return;
+            if (!confirm("Remove \"" + name + "\" from the sheet?")) return;
+            await sheetWrite('delete', { "App Name": name });
+            setTimeout(loadAndRender, 600);
+        }
     </script>
 </body>
 
