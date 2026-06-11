@@ -212,6 +212,25 @@
         .up { color: var(--green); } .down { color: var(--rose); }
         .donut-wrap { display: flex; align-items: center; gap: 18px; margin-top: 6px; }
 
+        /* ============ FORECAST ============ */
+        .forecast { margin-bottom: 14px; }
+        .forecast-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+        .forecast-title { font-family: var(--display); font-size: 1.7rem; font-weight: 800; letter-spacing: -0.02em; margin-top: 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .forecast-title .fc-of { color: var(--dim); font-size: 1rem; font-weight: 600; }
+        .forecast-title .fc-sub { font-family: var(--font); font-size: 0.85rem; font-weight: 500; color: var(--muted); }
+        .forecast-title .fc-sub b { color: #ff8a8a; font-weight: 700; }
+        .forecast-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+        .fc-tag { font-size: 0.75rem; font-weight: 700; padding: 7px 12px; border-radius: 9px; background: var(--surface-hi); border: 1px solid var(--stroke); color: var(--muted); white-space: nowrap; }
+        .fc-tag.good { color: #6ee7b7; border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); }
+        .fc-tag.warn { color: #fcd34d; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.1); }
+        .forecast-bar { display: flex; height: 16px; border-radius: 20px; overflow: hidden; background: rgba(255,255,255,0.06); border: 1px solid var(--stroke); }
+        .fc-seg { height: 100%; width: 0; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+        .fc-live { background: linear-gradient(90deg, #34d399, #10b981); box-shadow: 0 0 14px rgba(52,211,153,0.5); }
+        .fc-proj { background: repeating-linear-gradient(45deg, rgba(251,191,36,0.85) 0 8px, rgba(251,191,36,0.55) 8px 16px); }
+        .forecast-legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 14px; font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+        .forecast-legend b { color: var(--text); }
+        .forecast-legend .lg { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+
         /* ============ SECTION + TABS ============ */
         .section-head { display: flex; align-items: center; gap: 16px; margin: 32px 2px 16px; flex-wrap: wrap; }
         .section-head h2 { font-family: var(--display); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
@@ -472,29 +491,52 @@
                         <svg class="spark" id="spark" viewBox="0 0 320 94" preserveAspectRatio="none"></svg>
                     </div>
                     <div class="panel" style="animation-delay:0.07s">
-                        <div class="panel-label"><span class="dot" style="background:var(--sky)"></span>Active Apps</div>
+                        <div class="panel-label"><span class="dot" style="background:var(--red)"></span>Total Apps</div>
                         <div class="donut-wrap">
                             <svg width="74" height="74" viewBox="0 0 74 74" id="donut"></svg>
                             <div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">in pipeline</div></div>
                         </div>
                     </div>
                     <div class="panel" style="animation-delay:0.12s">
-                        <div class="panel-label"><span class="dot" style="background:var(--green)"></span>Shipped</div>
+                        <div class="panel-label"><span class="dot" style="background:var(--green)"></span>Live</div>
                         <div class="kpi-value" id="kpi-live">0</div>
-                        <div class="kpi-sub">apps live in stores</div>
-                        <div class="kpi-delta up">▲ live now</div>
+                        <div class="kpi-sub">published in stores</div>
+                        <div class="kpi-delta up">▲ shipped</div>
                     </div>
                     <div class="panel" style="animation-delay:0.17s">
-                        <div class="panel-label"><span class="dot" style="background:var(--amber)"></span>Next Launch</div>
-                        <div class="kpi-value" id="kpi-days">—</div>
-                        <div class="kpi-sub">days to nearest deadline</div>
-                        <div class="kpi-delta down">● upcoming</div>
+                        <div class="panel-label"><span class="dot" style="background:var(--amber)"></span>Draft</div>
+                        <div class="kpi-value" id="kpi-draft">0</div>
+                        <div class="kpi-sub">in dev / testing</div>
+                        <div class="kpi-delta up">▲ building</div>
                     </div>
                     <div class="panel" style="animation-delay:0.22s">
-                        <div class="panel-label"><span class="dot" style="background:var(--violet)"></span>In Development</div>
-                        <div class="kpi-value" id="kpi-dev">0</div>
-                        <div class="kpi-sub">building right now</div>
-                        <div class="kpi-delta up">▲ active sprints</div>
+                        <div class="panel-label"><span class="dot" style="background:var(--rose)"></span>Ideation</div>
+                        <div class="kpi-value" id="kpi-ideation">0</div>
+                        <div class="kpi-sub">not started yet</div>
+                        <div class="kpi-delta">● planning</div>
+                    </div>
+                </section>
+
+                <!-- ===== LAUNCH FORECAST ===== -->
+                <section class="panel forecast" style="animation-delay:0.26s">
+                    <div class="forecast-head">
+                        <div>
+                            <div class="panel-label"><span class="dot" style="background:var(--red)"></span>Launch Forecast</div>
+                            <div class="forecast-title"><span id="fc-projected">0</span><span class="fc-of">/ <span id="fc-total">0</span> apps</span> <span class="fc-sub">projected live by <b id="fc-horizon">—</b></span></div>
+                        </div>
+                        <div class="forecast-tags">
+                            <span class="fc-tag" id="fc-velocity">—</span>
+                            <span class="fc-tag" id="fc-track">—</span>
+                        </div>
+                    </div>
+                    <div class="forecast-bar">
+                        <div class="fc-seg fc-live" id="fc-bar-live" title="Live now"></div>
+                        <div class="fc-seg fc-proj" id="fc-bar-proj" title="Projected to launch"></div>
+                    </div>
+                    <div class="forecast-legend">
+                        <span><i class="lg" style="background:var(--green)"></i>Live now (<b id="fc-live-n">0</b>)</span>
+                        <span><i class="lg" style="background:var(--amber)"></i>On track to launch (<b id="fc-proj-n">0</b>)</span>
+                        <span><i class="lg" style="background:rgba(255,255,255,0.12)"></i>At risk / no date (<b id="fc-risk-n">0</b>)</span>
                     </div>
                 </section>
 
@@ -769,14 +811,16 @@
 
             document.getElementById('ring-row').innerHTML = `
                 <div class="ring-stat"><div class="num" style="color:var(--green)">${live}</div><div class="lbl">Live</div></div>
-                <div class="ring-stat"><div class="num" style="color:var(--amber)">${dev}</div><div class="lbl">In dev</div></div>
-                <div class="ring-stat"><div class="num" style="color:var(--indigo)">${ideas}</div><div class="lbl">Ideas</div></div>`;
+                <div class="ring-stat"><div class="num" style="color:var(--amber)">${dev}</div><div class="lbl">Draft</div></div>
+                <div class="ring-stat"><div class="num" style="color:var(--rose)">${ideas}</div><div class="lbl">Ideas</div></div>`;
             document.getElementById('kpi-total').textContent = total;
             document.getElementById('kpi-live').textContent = live;
-            document.getElementById('kpi-dev').textContent = dev;
-            document.getElementById('kpi-days').textContent = nextDays || '0';
+            document.getElementById('kpi-draft').textContent = dev;
+            document.getElementById('kpi-ideation').textContent = ideas;
             document.getElementById('pipeline-count').textContent = total + ' apps';
             document.getElementById('nav-apps').textContent = total;
+
+            forecast(appData, total, live, dev);
 
             // animated hero number
             (function countUp() {
@@ -929,6 +973,44 @@
                     el.innerHTML = `<span class="gs" style="color:var(--dim)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Repo private or rate-limited</span>`;
                 }
             }
+        }
+
+        // ===== Launch forecast / prediction =====
+        function forecast(apps, total, live, dev) {
+            const nonLive = apps.filter(a => a.status !== 'badge-live');
+            const onTrack = nonLive.filter(a => a.daysLeft > 0);      // has a future target → predicted to ship
+            const atRisk = nonLive.filter(a => !(a.daysLeft > 0));    // overdue or no date set
+            const projected = Math.min(total, live + onTrack.length);
+
+            // Horizon = furthest target month in the plan
+            let horizon = '—';
+            const dated = apps.filter(a => a.daysLeft > 0);
+            if (dated.length) horizon = dated.reduce((m, a) => a.daysLeft > m.daysLeft ? a : m).launch;
+
+            // Required velocity: avg %/month needed to finish the dated, unfinished apps on time
+            const vels = onTrack.map(a => (100 - a.progress) / Math.max(0.5, a.daysLeft / 30));
+            const vel = vels.length ? Math.round(vels.reduce((s, v) => s + v, 0) / vels.length) : 0;
+
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('fc-projected', projected); set('fc-total', total); set('fc-horizon', horizon);
+            set('fc-live-n', live); set('fc-proj-n', onTrack.length); set('fc-risk-n', atRisk.length);
+
+            const velTag = document.getElementById('fc-velocity');
+            velTag.textContent = vel > 0 ? `+${vel}%/mo needed` : 'all on schedule';
+            velTag.className = 'fc-tag ' + (vel <= 20 ? 'good' : 'warn');
+
+            const trackTag = document.getElementById('fc-track');
+            const ratio = total ? projected / total : 0;
+            if (ratio >= 0.8) { trackTag.textContent = '▲ On track'; trackTag.className = 'fc-tag good'; }
+            else if (ratio >= 0.4) { trackTag.textContent = '● Moderate pace'; trackTag.className = 'fc-tag warn'; }
+            else { trackTag.textContent = '● Early stage'; trackTag.className = 'fc-tag'; }
+
+            const liveW = total ? (live / total * 100) : 0;
+            const projW = total ? (onTrack.length / total * 100) : 0;
+            requestAnimationFrame(() => setTimeout(() => {
+                document.getElementById('fc-bar-live').style.width = liveW + '%';
+                document.getElementById('fc-bar-proj').style.width = projW + '%';
+            }, 250));
         }
 
         function renderTimeline(apps) {
