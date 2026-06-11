@@ -294,6 +294,7 @@
         .stage-edit::after { content: "▾"; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--dim); font-size: 0.7rem; pointer-events: none; }
         .stage-edit option { background: var(--panel); color: var(--text); text-transform: none; }
         .auto-pill { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #fca5a5; background: rgba(239,68,68,0.14); border: 1px solid rgba(239,68,68,0.35); padding: 3px 8px; border-radius: 7px; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 0 14px -4px rgba(239,68,68,0.5); }
+        .stale-pill { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #fcd34d; background: rgba(251,191,36,0.14); border: 1px solid rgba(251,191,36,0.35); padding: 3px 8px; border-radius: 7px; display: inline-flex; align-items: center; gap: 5px; }
 
         .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
         .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; font-size: 0.71rem; font-weight: 600; background: rgba(255,255,255,0.04); border: 1px solid var(--stroke); color: var(--muted); }
@@ -382,6 +383,17 @@
         .btn-ghost { flex: 1; padding: 12px; border-radius: 11px; cursor: pointer; background: transparent; border: 1px solid var(--stroke); color: var(--muted); font-family: inherit; font-weight: 600; font-size: 0.88rem; transition: border-color 0.2s, color 0.2s; }
         .btn-ghost:hover { border-color: var(--stroke-hi); color: var(--text); }
         .modal .btn { flex: 1; justify-content: center; }
+
+        /* ============ ACTIVITY FEED ============ */
+        .activity { display: flex; flex-direction: column; }
+        .act { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-top: 1px solid var(--stroke); }
+        .act:first-child { border-top: none; }
+        .act-icon { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 0.8rem; color: #fff; background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 50%, #000)); }
+        .act-body { min-width: 0; flex: 1; }
+        .act-msg { font-size: 0.88rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .act-meta { font-size: 0.75rem; color: var(--dim); margin-top: 2px; }
+        .act-meta b { color: var(--muted); font-weight: 600; }
+        .act-time { font-size: 0.76rem; color: var(--muted); font-weight: 600; white-space: nowrap; flex-shrink: 0; }
 
         /* ============ MOBILE NAV ============ */
         .mobile-nav { display: none; gap: 6px; background: var(--surface); border: 1px solid var(--stroke); border-radius: 13px; padding: 5px; margin-bottom: 22px; }
@@ -641,6 +653,15 @@
                     </div>
                 </section>
 
+                <!-- Recent Activity across all repos -->
+                <div class="section-head">
+                    <h2>Recent Activity</h2>
+                    <span class="count" id="activity-count"></span>
+                </div>
+                <div class="panel" style="padding: 8px 24px;">
+                    <div class="activity" id="activity"><div class="commit-time" style="padding:18px 0">Loading commits…</div></div>
+                </div>
+
                 <!-- Launch Timeline — stays on Dashboard -->
                 <div class="section-head" id="timeline-section">
                     <h2>Launch Timeline</h2>
@@ -875,6 +896,11 @@
                 if (hasCode) { autoProg = 30; if (m.size > 5000) autoProg += 15; if (m.size > 20000) autoProg += 15; }
                 a.progress = Math.min(100, Math.max(origProg, autoProg, STAGE_FLOOR[effRank] || 5));
                 if (a.stage !== origStage || a.progress > origProg) a._auto = true;
+                // Stale flag: real code but no push in 14+ days, and not already shipped.
+                a._lastPush = m.pushed_at;
+                const daysSince = (Date.now() - new Date(m.pushed_at)) / 86400000;
+                a._stale = hasCode && a.status !== 'badge-live' && daysSince > 14;
+                a._staleDays = Math.round(daysSince);
             }));
         }
 
@@ -912,6 +938,40 @@
             render(apps);                       // instant paint from stored values
             await applyAutoSignals(apps);       // then enrich from GitHub
             render(apps);                       // repaint with auto stage/progress
+            loadActivity(apps);                 // recent-commits stream (cached)
+        }
+
+        // ===== Activity feed: recent commits across all repos =====
+        const commitsCache = {};
+        async function repoCommits(url) {
+            const info = parseRepo(url); if (!info) return [];
+            const key = info.owner + '/' + info.repo;
+            if (commitsCache[key]) return commitsCache[key];
+            try {
+                const res = await fetch(`https://api.github.com/repos/${key}/commits?per_page=3`, { headers: { Accept: "application/vnd.github+json" } });
+                if (!res.ok) throw new Error(res.status);
+                const data = await res.json();
+                commitsCache[key] = data.map(c => ({ msg: c.commit.message.split('\n')[0], date: c.commit.author.date, who: c.commit.author.name }));
+            } catch (e) { commitsCache[key] = []; }
+            return commitsCache[key];
+        }
+        async function loadActivity(apps) {
+            const el = document.getElementById('activity'); if (!el) return;
+            const withRepo = apps.filter(a => a.github);
+            const all = [];
+            for (const a of withRepo) {
+                const cs = await repoCommits(a.github);
+                cs.forEach(c => all.push({ ...c, app: a.name, status: a.status }));
+            }
+            all.sort((x, y) => new Date(y.date) - new Date(x.date));
+            const top = all.slice(0, 10);
+            if (!top.length) { el.innerHTML = '<div class="commit-time" style="padding:18px 0">No recent commits yet (or GitHub rate-limited).</div>'; return; }
+            el.innerHTML = top.map(c => {
+                const col = accent[c.status] || '#f87171';
+                const ini = c.app.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                return `<div class="act"><div class="act-icon" style="--c:${col}">${ini}</div><div class="act-body"><div class="act-msg">${esc(c.msg)}</div><div class="act-meta"><b>${esc(c.app)}</b> &middot; ${esc(c.who)}</div></div><div class="act-time">${relTime(c.date)}</div></div>`;
+            }).join('');
+            const cntEl = document.getElementById('activity-count'); if (cntEl) cntEl.textContent = top.length + ' recent';
         }
 
         // POST a write (add/update/delete) to the Apps Script endpoint.
@@ -1034,6 +1094,7 @@
                     </div>
                     <div class="status-row">
                         ${app._auto ? `<span class="auto-pill" title="Stage/progress lifted from repo activity">⚡ auto</span>` : ''}
+                        ${app._stale ? `<span class="stale-pill" title="No commits in ${app._staleDays} days">⚠ stale ${app._staleDays}d</span>` : ''}
                         ${cs ? `<span class="pill ${cs.c}"><span class="sdot" style="background:currentColor"></span>Console: ${cs.t}</span>` : `<span class="pill"><span class="sdot" style="background:var(--dim)"></span>Not on console</span>`}
                         <span class="pill ${gh.c}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>${gh.t}</span>
                     </div>
@@ -1307,6 +1368,15 @@
 
         // Start on Dashboard (hides the apps-only search)
         showView('dashboard');
+
+        // ===== Auto-refresh: re-pull the sheet every 3 min (skips while editing) =====
+        setInterval(() => {
+            const modalOpen = document.getElementById('modal').classList.contains('open');
+            const onDetail = document.getElementById('view-detail').classList.contains('active');
+            const editing = !!document.getElementById('prog-input');
+            if (modalOpen || onDetail || editing) return;
+            loadAndRender();
+        }, 180000);
 
         // ===== Modal =====
         function openModal() { document.getElementById('modal').classList.add('open'); document.getElementById('f-name').focus(); }
