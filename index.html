@@ -533,7 +533,7 @@
         // Read + WRITE endpoint (Apps Script Web App /exec URL).
         // Paste your deployed URL here to let the page add/edit/delete in the real sheet.
         // Leave "" to keep browser-only adds. See SETUP.md for the 2-minute steps.
-        const GAS_URL = "";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbx0KZE2ETaCtSZRiAdWCoZQOSmZcWzaPqYHUQXpus4NDy_LB6J1OGP_Fj7CaPRHm3_Yng/exec";
 
         // Real portfolio — shown if the sheet can't be reached. Sheet (once imported) overrides this.
         const fallbackData = [
@@ -586,13 +586,28 @@
                 const pub = get(r, ci.pub);
                 return {
                     name: get(r, ci.name),
-                    progress: parseInt(get(r, ci.prog).replace(/[^\d]/g, ""), 10) || 0,
+                    progress: fmtProgress(get(r, ci.prog)),
                     stage, status: badgeFor(stage, pub),
-                    launch: get(r, ci.launch) || "—",
+                    launch: fmtLaunch(get(r, ci.launch)),
                     daysLeft: parseInt(get(r, ci.days).replace(/[^\d-]/g, ""), 10) || 0,
                     github: get(r, ci.github), firebase: get(r, ci.firebase), privacy: get(r, ci.privacy), notes: get(r, ci.notes)
                 };
             });
+        }
+
+        // Google Sheets auto-converts "100%"->1 (fraction) and "June 2026"->ISO date. Normalize both.
+        const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        function fmtProgress(v) {
+            let n = parseFloat(String(v).replace('%', '').trim());
+            if (isNaN(n)) return 0;
+            if (n > 0 && n <= 1) n *= 100;       // fraction from a "%" cell
+            return Math.round(Math.min(100, Math.max(0, n)));
+        }
+        function fmtLaunch(v) {
+            const s = String(v || "").trim();
+            if (!s) return "—";
+            if (/^\d{4}-\d{2}-\d{2}T/.test(s)) { const d = new Date(s); return MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear(); }
+            return s;
         }
 
         function consoleStatus(app) {
