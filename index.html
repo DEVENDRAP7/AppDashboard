@@ -385,16 +385,46 @@
         }
         @media (max-width: 860px) {
             :root { --sidebar-w: 0px; }
+            .app { grid-template-columns: 1fr; }
             .sidebar { display: none; }
             .main::before { inset: 0; }
-            .main-inner { padding: 18px 18px 60px; }
+            .main-inner { padding: 16px 16px 60px; }
+            .topbar { gap: 12px; }
+            .grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 620px) {
             .bento { grid-template-columns: 1fr; }
-            .hero { grid-column: span 1; }
-            .search { width: 150px; }
-            .hero-metric { font-size: 3.3rem; }
+            .hero { grid-column: span 1; grid-row: auto; padding: 22px; }
+            .hero-metric { font-size: 3rem; }
             .row2 { grid-template-columns: 1fr; }
+
+            /* Topbar: title on its own line, search full width, trim secondary actions */
+            .topbar { flex-direction: column; align-items: stretch; }
+            .page-title h1 { font-size: 1.4rem; }
+            .topbar-actions { margin-left: 0; width: 100%; gap: 10px; }
+            .search { flex: 1; width: auto; min-width: 0; }
+            .live-chip, .icon-btn[title="Notifications"] { display: none; }
+            .btn { padding: 0 14px; }
+
+            /* Section heads + tabs stack and scroll */
+            .section-head { gap: 10px; }
+            .tabs { margin-left: 0; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            .tab { flex: 1 0 auto; }
+
+            /* Forecast compresses */
+            .forecast-head { flex-direction: column; }
+            .forecast-title { font-size: 1.35rem; }
+            .forecast-tags { width: 100%; }
+            .forecast-legend { gap: 12px; font-size: 0.74rem; }
+
+            .card { padding: 18px; }
+            .app-name { font-size: 1.02rem; }
+        }
+        @media (max-width: 380px) {
+            .main-inner { padding: 14px 12px 50px; }
+            .hero-metric { font-size: 2.6rem; }
+            .kpi-value { font-size: 2rem; }
+            .gh-stats { gap: 10px; font-size: 0.72rem; }
         }
     </style>
 </head>
