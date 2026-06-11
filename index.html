@@ -997,8 +997,17 @@
 
         function deleteLocal(lid) { saveLocal(loadLocal().filter(a => a.lid !== lid)); renderLive(); }
         async function updateStage(name, stage) {
+            // Optimistic: move the card immediately, don't wait for the sheet round-trip.
+            const app = sheetApps.find(a => a.name === name) || loadLocal().find(a => a.name === name);
+            if (app) {
+                app.stage = stage;
+                app.status = badgeFor(stage, /live|publish/i.test(stage) ? "Yes" : "");
+                app.progress = Math.min(100, Math.max(app.progress || 0, STAGE_FLOOR[stageRank(stage)] || 0));
+            }
+            renderLive();
+            // Persist to the sheet, then re-sync to confirm (allow time for the write to commit).
             await sheetWrite('update', { "App Name": name, "Current Stage": stage, "Published?": /live|publish/i.test(stage) ? "Yes" : "No" });
-            setTimeout(loadAndRender, 600);
+            setTimeout(loadAndRender, 2000);
         }
 
         // ===== Confetti burst (SVG-style particles on canvas) =====
