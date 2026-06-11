@@ -535,8 +535,15 @@
         // Leave "" to keep browser-only adds. See SETUP.md for the 2-minute steps.
         const GAS_URL = "";
 
+        // Real portfolio — shown if the sheet can't be reached. Sheet (once imported) overrides this.
         const fallbackData = [
-            { name: "Idea 1", progress: 0, stage: "Ideation", status: "badge-ideation", launch: "July 2026", daysLeft: 19, github: "", privacy: "", notes: "Ready for your first app" }
+            { name: "DigiPulse", progress: 100, stage: "Live", status: "badge-live", launch: "June 2026", daysLeft: 0, github: "https://github.com/DEVENDRAP7/PhoneMoodTranslator", firebase: "", privacy: "https://github.com/DEVENDRAP7/PhoneMoodTranslator/blob/main/privacy_policy.md", notes: "Published. Was Phone Mood Translator." },
+            { name: "FIFA World Cup", progress: 90, stage: "Closed Testing", status: "badge-dev", launch: "June 2026", daysLeft: 7, github: "https://github.com/DEVENDRAP7/FifaWorldCup", firebase: "https://console.firebase.google.com/project/fifaworldcup2026-23d01/overview", privacy: "https://github.com/DEVENDRAP7/FifaWorldCup/blob/main/delete-account.html", notes: "Closed testing on Play. Flutter + Firebase." },
+            { name: "Riddles - Brain", progress: 5, stage: "Ideation", status: "badge-ideation", launch: "July 2026", daysLeft: 30, github: "https://github.com/DEVENDRAP7/Riddles-brain", firebase: "", privacy: "", notes: "Riddles suite." },
+            { name: "Riddles - Maths", progress: 5, stage: "Ideation", status: "badge-ideation", launch: "August 2026", daysLeft: 61, github: "https://github.com/DEVENDRAP7/Riddles-maths", firebase: "", privacy: "", notes: "Riddles suite." },
+            { name: "Riddles - Words", progress: 5, stage: "Ideation", status: "badge-ideation", launch: "September 2026", daysLeft: 92, github: "https://github.com/DEVENDRAP7/Riddles-words", firebase: "", privacy: "", notes: "Riddles suite." },
+            { name: "Riddles - Fun", progress: 5, stage: "Ideation", status: "badge-ideation", launch: "October 2026", daysLeft: 122, github: "https://github.com/DEVENDRAP7/Riddles-fun", firebase: "", privacy: "", notes: "Riddles suite." },
+            { name: "Riddles - Pics", progress: 5, stage: "Ideation", status: "badge-ideation", launch: "November 2026", daysLeft: 153, github: "https://github.com/DEVENDRAP7/Riddles-pics", firebase: "", privacy: "", notes: "Build LAST (image-heavy)." }
         ];
 
         const accent = { "badge-dev": "#fbbf24", "badge-ideation": "#818cf8", "badge-live": "#34d399" };
@@ -608,18 +615,20 @@
         let filter = "all";
         const merged = () => [...sheetApps, ...loadLocal()];
 
+        // Treat an untouched template sheet (only "Idea 1", "Idea 2"… rows) as empty,
+        // so the real portfolio shows until you import sheet-data.csv.
+        const isTemplate = apps => apps.length && apps.every(a => /^idea\s*\d+$/i.test(a.name.trim()));
+        const useOrFallback = apps => (!apps.length || isTemplate(apps)) ? fallbackData : apps;
+
         async function loadAndRender() {
             try {
                 if (GAS_URL) {
                     // Live read + write path (Apps Script returns a 2D array incl. header row)
                     const res = await fetch(GAS_URL, { cache: "no-store" });
-                    const rows = await res.json();
-                    const apps = rowsToApps(rows);
-                    sheetApps = apps.length ? apps : fallbackData;
+                    sheetApps = useOrFallback(rowsToApps(await res.json()));
                 } else {
                     const res = await fetch(SHEET_CSV, { cache: "no-store" });
-                    if (res.ok) { const apps = rowsToApps(parseCSV(await res.text())); sheetApps = apps.length ? apps : fallbackData; }
-                    else sheetApps = fallbackData;
+                    sheetApps = res.ok ? useOrFallback(rowsToApps(parseCSV(await res.text()))) : fallbackData;
                 }
             } catch (e) { console.warn("Sheet fetch failed:", e); if (!sheetApps.length) sheetApps = fallbackData; }
             render(merged());
@@ -830,8 +839,9 @@
             const svg = btn.querySelector('svg'), txt = btn.querySelector('span'), orig = txt ? txt.textContent : '';
             if (svg) { svg.style.transition = 'transform 0.8s ease'; svg.style.transform = 'rotate(360deg)'; }
             if (txt) txt.textContent = 'Syncing…';
-            fetch(SHEET_CSV, { cache: "no-store" }).then(r => r.text())
-                .then(t => { const a = rowsToApps(parseCSV(t)); if (a.length) sheetApps = a; render(merged()); if (txt) txt.textContent = 'Synced ✓'; })
+            const url = GAS_URL || SHEET_CSV;
+            fetch(url, { cache: "no-store" }).then(r => GAS_URL ? r.json() : r.text())
+                .then(d => { sheetApps = useOrFallback(rowsToApps(GAS_URL ? d : parseCSV(d))); render(merged()); if (txt) txt.textContent = 'Synced ✓'; })
                 .catch(() => { if (txt) txt.textContent = 'Offline'; })
                 .finally(() => setTimeout(() => { if (txt) txt.textContent = orig; if (svg) svg.style.transform = 'rotate(0deg)'; }, 1200));
         }
