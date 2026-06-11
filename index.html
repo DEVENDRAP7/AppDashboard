@@ -662,6 +662,7 @@
             { k: 'backlog', r: 0 }, { k: 'ideation', r: 0 }, { k: 'plan', r: 0 }
         ];
         function stageRank(s) { s = (s || '').toLowerCase(); for (const x of STAGE_RANK) if (s.includes(x.k)) return x.r; return 0; }
+        const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const STAGE_FLOOR = { 0: 5, 1: 40, 2: 80, 3: 100 };
 
         async function ghMeta(url) {
@@ -843,7 +844,7 @@
                             </div>
                         </div>
                         ${editable
-                            ? `<span class="badge-edit"><select class="badge-sel ${app.status}" title="Change stage" onchange="updateStage(${JSON.stringify(app.name)}, this.value)">${["Ideation", "Backlog", "Development", "Closed Testing", "Live"].map(s => `<option ${s.toLowerCase() === (app.stage || '').toLowerCase() ? 'selected' : ''}>${s}</option>`).join('')}</select></span>`
+                            ? `<span class="badge-edit"><select class="badge-sel ${app.status}" title="Change stage" data-name="${esc(app.name)}" onchange="updateStage(this.dataset.name, this.value)">${["Ideation", "Backlog", "Development", "Closed Testing", "Live"].map(s => `<option ${s.toLowerCase() === (app.stage || '').toLowerCase() ? 'selected' : ''}>${s}</option>`).join('')}</select></span>`
                             : `<div class="badge ${app.status}">${app.stage}</div>`}
                     </div>
                     <div class="status-row">
