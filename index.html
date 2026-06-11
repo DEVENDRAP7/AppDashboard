@@ -231,7 +231,19 @@
         .badge-dev      { background: rgba(251,191,36,0.12); color: #fcd34d; border-color: rgba(251,191,36,0.3); }
         .badge-live     { background: rgba(52,211,153,0.12); color: #6ee7b7; border-color: rgba(52,211,153,0.3); }
 
-        .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .stage-edit { position: relative; }
+        .stage-edit select {
+            appearance: none; -webkit-appearance: none; cursor: pointer;
+            background: var(--surface-hi); border: 1px solid var(--stroke); color: var(--muted);
+            font-family: inherit; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+            padding: 5px 24px 5px 10px; border-radius: 8px; outline: none; transition: border-color 0.2s, color 0.2s;
+        }
+        .stage-edit select:hover, .stage-edit select:focus { color: var(--text); border-color: var(--stroke-hi); }
+        .stage-edit::after { content: "▾"; position: absolute; right: 9px; top: 50%; transform: translateY(-50%); color: var(--dim); font-size: 0.7rem; pointer-events: none; }
+        .stage-edit option { background: var(--panel); color: var(--text); text-transform: none; }
+        .auto-pill { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sky); background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.3); padding: 3px 8px; border-radius: 7px; display: inline-flex; align-items: center; gap: 5px; }
+
+        .status-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
         .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; font-size: 0.71rem; font-weight: 600; background: rgba(255,255,255,0.04); border: 1px solid var(--stroke); color: var(--muted); }
         .pill svg { width: 13px; height: 13px; }
         .pill .sdot { width: 7px; height: 7px; border-radius: 50%; }
@@ -621,6 +633,48 @@
             return app.github ? { t: "Repo synced", c: "gh-synced" } : { t: "No repo", c: "gh-none" };
         }
 
+        // ===== Auto stage + progress from repo signals (manual override always wins) =====
+        // Stage seniority. Auto can only raise to Development; you set Testing/Live yourself.
+        const STAGE_RANK = [
+            { k: 'live', r: 3 }, { k: 'publish', r: 3 },
+            { k: 'closed testing', r: 2 }, { k: 'testing', r: 2 }, { k: 'beta', r: 2 },
+            { k: 'develop', r: 1 }, { k: 'build', r: 1 }, { k: 'progress', r: 1 }, { k: 'dev', r: 1 },
+            { k: 'backlog', r: 0 }, { k: 'ideation', r: 0 }, { k: 'plan', r: 0 }
+        ];
+        function stageRank(s) { s = (s || '').toLowerCase(); for (const x of STAGE_RANK) if (s.includes(x.k)) return x.r; return 0; }
+        const STAGE_FLOOR = { 0: 5, 1: 40, 2: 80, 3: 100 };
+
+        async function ghMeta(url) {
+            const info = parseRepo(url); if (!info) return null;
+            const key = info.owner + '/' + info.repo;
+            if (ghCache[key]) return ghCache[key];
+            try {
+                const res = await fetch(`https://api.github.com/repos/${key}`, { headers: { Accept: "application/vnd.github+json" } });
+                if (!res.ok) throw new Error(res.status);
+                ghCache[key] = await res.json(); return ghCache[key];
+            } catch (e) { return null; }
+        }
+
+        // Mutates apps in place: bumps stage/progress when the repo shows real development.
+        async function applyAutoSignals(apps) {
+            await Promise.all(apps.map(async a => {
+                if (!a.github) return;
+                const m = await ghMeta(a.github); if (!m) return;
+                const origStage = a.stage, origProg = a.progress || 0;
+                const hasCode = !!m.language && m.size > 500;   // empty skeleton (only README/PLAN) ~2KB
+                const manualRank = stageRank(a.stage);
+                const effRank = Math.max(hasCode ? 1 : 0, manualRank);
+                // Auto-relabel only when lifting a planning stage up to Development.
+                if (effRank === 1 && manualRank === 0) a.stage = 'Development';
+                a.status = badgeFor(a.stage, effRank >= 3 ? 'Yes' : '');
+                // Auto progress from repo heft, then take the highest of manual / auto / stage-floor.
+                let autoProg = 5;
+                if (hasCode) { autoProg = 30; if (m.size > 5000) autoProg += 15; if (m.size > 20000) autoProg += 15; }
+                a.progress = Math.min(100, Math.max(origProg, autoProg, STAGE_FLOOR[effRank] || 5));
+                if (a.stage !== origStage || a.progress > origProg) a._auto = true;
+            }));
+        }
+
         // ---- Local additions ----
         const LS_KEY = "missioncontrol_local_apps";
         const loadLocal = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } };
@@ -646,7 +700,15 @@
                     sheetApps = res.ok ? useOrFallback(rowsToApps(parseCSV(await res.text()))) : fallbackData;
                 }
             } catch (e) { console.warn("Sheet fetch failed:", e); if (!sheetApps.length) sheetApps = fallbackData; }
-            render(merged());
+            renderLive();
+        }
+
+        // Render with live auto-signals applied (repo-driven stage/progress bumps).
+        async function renderLive() {
+            const apps = merged();
+            render(apps);                       // instant paint from stored values
+            await applyAutoSignals(apps);       // then enrich from GitHub
+            render(apps);                       // repaint with auto stage/progress
         }
 
         // POST a write (add/update/delete) to the Apps Script endpoint.
@@ -762,6 +824,10 @@
                         <div class="badge ${app.status}">${app.stage}</div>
                     </div>
                     <div class="status-row">
+                        ${(GAS_URL && !app.local) ? `<span class="stage-edit"><select onchange="updateStage(${JSON.stringify(app.name)}, this.value)">
+                            ${["Ideation", "Backlog", "Development", "Closed Testing", "Live"].map(s => `<option ${s.toLowerCase() === (app.stage || '').toLowerCase() ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select></span>` : ''}
+                        ${app._auto ? `<span class="auto-pill" title="Stage/progress lifted from repo activity">⚡ auto</span>` : ''}
                         ${cs ? `<span class="pill ${cs.c}"><span class="sdot" style="background:currentColor"></span>Console: ${cs.t}</span>` : `<span class="pill"><span class="sdot" style="background:var(--dim)"></span>Not on console</span>`}
                         <span class="pill ${gh.c}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2A10 10 0 0 0 8.84 21.5c.5.08.66-.22.66-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.9.83.1-.65.36-1.09.64-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.39.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.16.57.67.48A10 10 0 0 0 12 2z"/></svg>${gh.t}</span>
                     </div>
@@ -856,7 +922,7 @@
             if (txt) txt.textContent = 'Syncing…';
             const url = GAS_URL || SHEET_CSV;
             fetch(url, { cache: "no-store" }).then(r => GAS_URL ? r.json() : r.text())
-                .then(d => { sheetApps = useOrFallback(rowsToApps(GAS_URL ? d : parseCSV(d))); render(merged()); if (txt) txt.textContent = 'Synced ✓'; })
+                .then(d => { sheetApps = useOrFallback(rowsToApps(GAS_URL ? d : parseCSV(d))); renderLive(); if (txt) txt.textContent = 'Synced ✓'; })
                 .catch(() => { if (txt) txt.textContent = 'Offline'; })
                 .finally(() => setTimeout(() => { if (txt) txt.textContent = orig; if (svg) svg.style.transform = 'rotate(0deg)'; }, 1200));
         }
@@ -914,10 +980,14 @@
             });
             saveLocal(arr);
             closeModal(); reset(); confetti();
-            render(merged());
+            renderLive();
         }
 
-        function deleteLocal(lid) { saveLocal(loadLocal().filter(a => a.lid !== lid)); render(merged()); }
+        function deleteLocal(lid) { saveLocal(loadLocal().filter(a => a.lid !== lid)); renderLive(); }
+        async function updateStage(name, stage) {
+            await sheetWrite('update', { "App Name": name, "Current Stage": stage, "Published?": /live|publish/i.test(stage) ? "Yes" : "No" });
+            setTimeout(loadAndRender, 600);
+        }
 
         // ===== Confetti burst (SVG-style particles on canvas) =====
         function confetti() {
