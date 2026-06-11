@@ -736,6 +736,9 @@
 
         // ===== RENDER =====
         function render(appData) {
+            // Stage drives a minimum progress — applied here so changing stage moves the bar
+            // immediately, even if GitHub is unreachable/rate-limited.
+            appData.forEach(a => { a.progress = Math.min(100, Math.max(a.progress || 0, STAGE_FLOOR[stageRank(a.stage)] || 0)); });
             const total = appData.length;
             const live = appData.filter(a => a.status === "badge-live").length;
             const dev = appData.filter(a => a.status === "badge-dev").length;
